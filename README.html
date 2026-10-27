@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>iPOS HRM Pro - Hệ thống Chấm công AI OCR & Quản trị Nhân sự</title>
+  <!-- Thư viện AI OCR Tesseract.js để đọc chữ ngày giờ bên trong ảnh chụp màn hình -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <!-- Thư viện EXIF-JS để đọc Metadata gốc của ảnh chụp camera -->
+  <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+  <style>
+    :root {
+      --bg-main: #F4F7FE;
+      --bg-card: #FFFFFF;
+      --text-primary: #111111;
+      --text-secondary: #575B5F;
+      --tech-blue: #1A73E8;
+      --tech-blue-dark: #174EA6;
+      --tech-cyan: #12B5CB;
+      --tech-mint: #1E8E3E;
+      --tech-orange: #FA903E;
+      --tech-red: #D93025;
+      --border-color: #E2E8F0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; }
+    body { background-color: var(--bg-main); color: var(--text-primary); padding-bottom: 50px; }
+    
+    .app-header {
+      background: linear-gradient(135deg, var(--tech-blue-dark), var(--tech-blue));
+      color: #FFFFFF;
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: 0 2px 10px rgba(26, 115, 232, 0.2);
+    }
+    .brand-title { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; display: flex; align-items: center; gap: 10px; }
+    .brand-badge { background: var(--tech-cyan); font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 600; }
+    .header-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+    .kpi-container {
+      max-width: 1240px;
+      margin: 20px auto 15px;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .kpi-card {
+      background: var(--bg-card);
+      border-radius: 10px;
+      padding: 16px 20px;
+      border-left: 4px solid var(--tech-blue);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .kpi-card.cyan { border-left-color: var(--tech-cyan); }
+    .kpi-card.mint { border-left-color: #34A853; }
+    .kpi-card.orange { border-left-color: var(--tech-orange); }
+    .kpi-label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; }
+    .kpi-value { font-size: 22px; font-weight: 700; margin-top: 6px; color: var(--text-primary); }
+
+    .nav-tabs {
+      max-width: 1240px;
+      margin: 0 auto 20px;
+      padding: 0 16px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: var(--tech-blue);
+      color: #FFFFFF;
+      border-color: var(--tech-blue);
+      box-shadow: 0 2px 6px rgba(26, 115, 232, 0.25);
+    }
+
+    .main-container { max-width: 1240px; margin: 0 auto; padding: 0 16px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .card {
+      background: var(--bg-card);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--tech-blue-dark);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      align-items: end;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+    .form-group input, .form-group select, .form-group textarea {
+      padding: 9px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: var(--tech-blue); }
+    
+    .ocr-status {
+      font-size: 11px;
+      font-weight: 600;
+      min-height: 16px;
+      color: var(--tech-blue);
+    }
+    .ocr-status.scanning { color: var(--tech-orange); }
+    .ocr-status.success { color: var(--tech-mint); }
+
+    .live-calc-banner {
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: #E8F0FE;
+      border-left: 4px solid var(--tech-blue);
+      border-radius: 6px;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .btn {
+      background: var(--tech-blue);
+      color: #FFFFFF;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: opacity 0.2s, background 0.2s;
+    }
+    .btn:hover { background: var(--tech-blue-dark); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-secondary { background: var(--tech-cyan); }
+    .btn-secondary:hover { background: #0E94A6; }
+    .btn-success { background: #1E8E3E; }
+    .btn-success:hover { background: #137333; }
+    .btn-warning { background: var(--tech-orange); }
+    .btn-warning:hover { background: #E07B29; }
+    .btn-danger { background: var(--tech-red); }
+    .btn-danger:hover { background: #B31412; }
+    .btn-outline {
+      background: rgba(255,255,255,0.15);
+      color: #FFFFFF;
+      border: 1px solid rgba(255,255,255,0.4);
+      padding: 8px 14px;
+      font-size: 12px;
+    }
+    .btn-outline:hover { background: rgba(255,255,255,0.28); }
+    .btn-sm { padding: 6px 10px; font-size: 12px; border-radius: 5px; }
+    .action-group { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .table-responsive { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      background: #F8FAFC;
+      color: var(--text-secondary);
+      font-weight: 700;
+      text-align: left;
+      padding: 12px;
+      border-bottom: 2px solid var(--border-color);
+      white-space: nowrap;
+    }
+    td { padding: 12px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+    .thumb-box { display: flex; align-items: center; gap: 10px; }
+    .thumb-img { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border-color); flex-shrink: 0; cursor: zoom-in; }
+    .timestamp-tag {
+      display: inline-block;
+      background: #E8F0FE;
+      color: var(--tech-blue-dark);
+      padding: 3px 7px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 11px;
+      margin-top: 3px;
+    }
+    .badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-block; margin: 2px; }
+    .badge-reward { background: #E6F4EA; color: #137333; }
+    .badge-penalty { background: #FCE8E6; color: #C5221F; }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(17, 24, 39, 0.55);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+      background: var(--bg-card);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 580px;
+      padding: 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .modal-header h3 { font-size: 16px; color: var(--tech-blue-dark); }
+    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-secondary); }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-color);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="brand-title">
+      <span>iPOS HRM CLOUD</span>
+      <span class="brand-badge">AI OCR EDITION</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline" onclick="exportBackupJSON()">⬇ Tải File Backup (.JSON)</button>
+      <button class="btn btn-outline" onclick="openDriveModal()">☁ Lưu trữ Google Drive</button>
+      <button class="btn btn-success" style="padding:8px 14px; font-size:12px;" onclick="exportMonthlySheet()">📊 Xuất Sheet Tổng hợp Cuối tháng (.CSV/Excel)</button>
+    </div>
+  </header>
+
+  <section class="kpi-container">
+    <div class="kpi-card">
+      <div class="kpi-label">Tổng Nhân sự Hệ thống</div>
+      <div class="kpi-value" id="kpi-staff-count">0 Nhân viên</div>
+    </div>
+    <div class="kpi-card cyan">
+      <div class="kpi-label">Tổng Giờ công Đã Xác thực</div>
+      <div class="kpi-value" id="kpi-total-hours">0.00 Giờ</div>
+    </div>
+    <div class="kpi-card mint">
+      <div class="kpi-label">Quỹ Lương & Thưởng Tạm tính</div>
+      <div class="kpi-value" id="kpi-total-payroll">0 VNĐ</div>
+    </div>
+    <div class="kpi-card orange">
+      <div class="kpi-label">Tổng Lượt Chấm công</div>
+      <div class="kpi-value" id="kpi-total-records">0 Lượt</div>
+    </div>
+  </section>
+
+  <nav class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('tab-attendance', this)">1. Chấm công AI Đọc Ảnh & Bảng Chấm công</button>
+    <button class="tab-btn" onclick="switchTab('tab-employees', this)">2. Quản lý Nhân sự, Ngân hàng & Thu nhập</button>
+    <button class="tab-btn" onclick="switchTab('tab-gamification', this)">3. Thi đua Thưởng/Phạt & Báo cáo Cuối ngày</button>
+    <button class="tab-btn" onclick="switchTab('tab-backup', this)">4. Sao lưu Google Drive & Xuất Sheet Cuối tháng</button>
+  </nav>
+
+  <main class="main-container">
+    <!-- TAB 1 -->
+    <section id="tab-attendance" class="tab-panel active">
+      <div class="card">
+        <div class="card-title">
+          <span>Thêm Nhanh Hồ sơ Nhân viên Mới</span>
+          <span style="font-size:12px; color:var(--text-secondary); font-weight:400;">Đồng bộ tự động với Bảng chấm công & Sổ lương</span>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Họ và Tên Nhân viên</label>
+            <input type="text" id="new-emp-name" placeholder="VD: Vũ Vinh Sơn">
+          </div>
+          <div class="form-group">
+            <label>Lương cố định / giờ (VNĐ)</label>
+            <input type="number" id="new-emp-rate" placeholder="VD: 25000" value="25000">
+          </div>
+          <div class="form-group">
+            <label>Ngân hàng thụ hưởng</label>
+            <input type="text" id="new-emp-bank" placeholder="VD: Techcombank">
+          </div>
+          <div class="form-group">
+            <label>Số Tài khoản Ngân hàng</label>
+            <input type="text" id="new-emp-acc" placeholder="VD: 190388492010">
+          </div>
+          <button class="btn" onclick="addEmployee()">+ Lưu Nhân viên</button>
+        </div>
+      </div>
+
+      <!-- Khu vực tải ảnh có AI OCR đọc chữ thời gian trong ảnh -->
+      <div class="card">
+        <div class="card-title">
+          <span>Thêm Lượt Chấm công Mới (AI Tự động Đọc Giờ Chụp Bên Trong Ảnh hoặc EXIF)</span>
+          <span style="font-size:12px; color:var(--tech-mint); font-weight:600;">✓ Hỗ trợ đọc chữ thời gian trong ảnh chụp màn hình iPhone/Android</span>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Chọn Nhân viên</label>
+            <select id="att-emp-select"></select>
+          </div>
+          <div class="form-group">
+            <label>Ảnh Check-in (Tải ảnh lên để AI đọc giờ)</label>
+            <input type="file" id="att-checkin-file" accept="image/*" onchange="analyzeUploadedImage(this, 'checkin-meta-preview', 'att-manual-in')">
+            <div id="checkin-meta-preview" class="ocr-status">Chưa chọn ảnh</div>
+          </div>
+          <div class="form-group">
+            <label>Giờ Check-in (Tự điền từ ảnh / Có thể sửa)</label>
+            <input type="datetime-local" id="att-manual-in" onchange="updateLiveDurationPreview()">
+          </div>
+          <div class="form-group">
+            <label>Ảnh Check-out (Tải ảnh lên để AI đọc giờ)</label>
+            <input type="file" id="att-checkout-file" accept="image/*" onchange="analyzeUploadedImage(this, 'checkout-meta-preview', 'att-manual-out')">
+            <div id="checkout-meta-preview" class="ocr-status">Chưa chọn ảnh</div>
+          </div>
+          <div class="form-group">
+            <label>Giờ Check-out (Tự điền từ ảnh / Có thể sửa)</label>
+            <input type="datetime-local" id="att-manual-out" onchange="updateLiveDurationPreview()">
+          </div>
+          <div class="form-group">
+            <label>Ghi chú Chấm công</label>
+            <input type="text" id="att-note" placeholder="VD: Đúng giờ, đủ đồng phục">
+          </div>
+          <button class="btn btn-secondary" id="btn-record-att" onclick="recordAttendance()">+ Thêm vào Bảng Chấm công</button>
+        </div>
+
+        <!-- Thanh hiển thị kết quả tính giờ trực tiếp từ 2 ảnh -->
+        <div class="live-calc-banner" id="live-calc-banner">
+          <span>⏱ <strong>Kết quả tính giờ từ ảnh:</strong> <span id="live-calc-text">Hãy tải lên ảnh Check-in và Check-out để hệ thống đọc thời gian...</span></span>
+          <span id="live-calc-hours" style="font-weight:700; color:var(--tech-blue-dark); font-size:15px;">0.00 giờ</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>Bảng Thống kê Chấm công Chi tiết (Cho phép Sửa, Cập nhật & Xóa)</span>
+          <button class="btn btn-success btn-sm" onclick="exportMonthlySheet()">📊 Xuất Sheet Tổng hợp (.CSV)</button>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>1. Tên nhân viên</th>
+                <th>2. Check in (Ảnh & Thời gian trong ảnh)</th>
+                <th>3. Check out (Ảnh & Thời gian trong ảnh)</th>
+                <th>4. Tổng giờ làm</th>
+                <th>5. Lương cố định/h</th>
+                <th>6. Thành tiền</th>
+                <th>7. Ghi chú</th>
+                <th>Thao tác (Sửa/Xóa)</th>
+              </tr>
+            </thead>
+            <tbody id="attendance-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2 -->
+    <section id="tab-employees" class="tab-panel">
+      <div class="card">
+        <div class="card-title">
+          <span>Danh sách Nhân viên, Tài khoản Ngân hàng & Tổng Thu nhập (Có quyền Chỉnh sửa / Xóa)</span>
+          <button class="btn btn-sm" onclick="openAddEmployeeModal()">+ Thêm Nhân viên Mới</button>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Mã & Họ tên Nhân viên</th>
+                <th>Tài khoản Ngân hàng</th>
+                <th>Lương cố định/h & Giờ tích lũy</th>
+                <th>Lương Cơ bản</th>
+                <th>Thưởng / Phạt Thi đua</th>
+                <th>Tổng thu nhập (Thực lĩnh)</th>
+                <th>Thao tác (Chỉnh sửa / Xóa)</th>
+              </tr>
+            </thead>
+            <tbody id="employee-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3 -->
+    <section id="tab-gamification" class="tab-panel">
+      <div class="card">
+        <div class="card-title">Báo cáo Hình ảnh Toàn phòng Cuối giờ làm & Chấm điểm Thi đua Khen thưởng / Phạt</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Nhân viên Báo cáo Cuối ca</label>
+            <select id="eval-emp-select"></select>
+          </div>
+          <div class="form-group">
+            <label>Ảnh chụp Toàn phòng Cuối giờ (Gallery)</label>
+            <input type="file" id="eval-room-photo" accept="image/*" onchange="analyzeUploadedImage(this, 'room-meta-preview', null)">
+            <small id="room-meta-preview" class="ocr-status"></small>
+          </div>
+          <div class="form-group">
+            <label>Tiến độ Công việc trong ngày (%)</label>
+            <input type="number" id="eval-progress" value="100" min="0" max="100">
+          </div>
+          <div class="form-group">
+            <label>Vấn đề phát sinh trong ngày</label>
+            <input type="text" id="eval-issues" placeholder="VD: Phòng sạch sẽ, đã tắt thiết bị">
+          </div>
+          <div class="form-group">
+            <label>Loại Thi đua</label>
+            <select id="eval-type">
+              <option value="reward">Khen thưởng (+ VNĐ)</option>
+              <option value="penalty">Xử phạt (- VNĐ)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Số tiền Thưởng / Phạt (VNĐ)</label>
+            <input type="number" id="eval-amount" value="50000" step="10000">
+          </div>
+          <button class="btn" onclick="submitEndShiftReport()">Lưu Báo cáo & Cập nhật Lương</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Nhật ký Ảnh Toàn phòng Cuối ca, Tiến độ & Quyết định Thưởng / Phạt</div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Nhân viên</th>
+                <th>Ảnh Toàn phòng & Giờ chụp</th>
+                <th>Tiến độ Công việc</th>
+                <th>Các vấn đề trong ngày</th>
+                <th>Thưởng / Phạt Thi đua</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="eval-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4 -->
+    <section id="tab-backup" class="tab-panel">
+      <div class="card">
+        <div class="card-title">1. Xuất File Sheet Tổng hợp Lương & Chấm công Cuối tháng</div>
+        <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px;">
+          Hệ thống sẽ tổng hợp toàn bộ dữ liệu Nhân sự, Tài khoản ngân hàng, Tổng giờ làm, Lương cơ bản, Thưởng/Phạt và Thực lĩnh cuối tháng kèm chi tiết từng ca chấm công ra file bảng tính chuẩn UTF-8 (Mở trực tiếp bằng <strong>Microsoft Excel</strong> hoặc tải lên <strong>Google Sheets</strong>).
+        </p>
+        <div class="form-grid" style="max-width: 750px;">
+          <div class="form-group">
+            <label>Chọn Tháng/Năm Xuất Báo cáo</label>
+            <input type="month" id="export-month-picker" value="2026-10">
+          </div>
+          <button class="btn btn-success" onclick="exportMonthlySheet()">📊 Tải File Sheet Tổng hợp Cuối tháng (.CSV)</button>
+          <button class="btn btn-secondary" onclick="exportAttendanceDetailSheet()">📋 Xuất Riêng Bảng Chấm công Chi tiết (.CSV)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">2. Sao lưu (Backup) Dữ liệu Hệ thống & Đồng bộ Google Drive</div>
+        <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px;">
+          Toàn bộ dữ liệu đang được tự động lưu trên trình duyệt (`localStorage`). Bạn có thể xuất file dự phòng `.json` để lưu vào thư mục Google Drive trên máy, đẩy trực tiếp lên Google Drive thông qua Google Apps Script Webhook, hoặc khôi phục lại dữ liệu bất cứ lúc nào.
+        </p>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Tải File Lưu trữ về Máy / Thư mục Drive</label>
+            <button class="btn" onclick="exportBackupJSON()">⬇ Xuất File Backup (.JSON)</button>
+          </div>
+          <div class="form-group">
+            <label>Khôi phục Dữ liệu từ File Backup (.JSON)</label>
+            <input type="file" id="restore-json-input" accept=".json" onchange="importBackupJSON(this)">
+          </div>
+          <div class="form-group">
+            <label>Đồng bộ Trực tiếp lên Google Drive Cloud</label>
+            <button class="btn btn-warning" onclick="openDriveModal()">☁ Cấu hình & Đẩy lên Google Drive</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL 1: SỬA NHÂN VIÊN -->
+  <div class="modal-overlay" id="modal-edit-employee">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Chỉnh sửa Hồ sơ Nhân viên</h3>
+        <button class="modal-close" onclick="closeModal('modal-edit-employee')">&times;</button>
+      </div>
+      <input type="hidden" id="edit-emp-id">
+      <div class="form-grid" style="grid-template-columns: 1fr;">
+        <div class="form-group">
+          <label>Họ và Tên Nhân viên</label>
+          <input type="text" id="edit-emp-name">
+        </div>
+        <div class="form-group">
+          <label>Lương cố định / giờ (VNĐ)</label>
+          <input type="number" id="edit-emp-rate">
+        </div>
+        <div class="form-group">
+          <label>Ngân hàng thụ hưởng</label>
+          <input type="text" id="edit-emp-bank">
+        </div>
+        <div class="form-group">
+          <label>Số Tài khoản Ngân hàng</label>
+          <input type="text" id="edit-emp-acc">
+        </div>
+        <div class="form-group" style="flex-direction: row; align-items: center; gap: 8px; margin-top: 4px;">
+          <input type="checkbox" id="edit-emp-sync-att" checked style="width:16px; height:16px;">
+          <label for="edit-emp-sync-att" style="margin:0; cursor:pointer;">Cập nhật mức lương/giờ mới này cho toàn bộ các lượt chấm công trước đó của nhân viên</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" onclick="closeModal('modal-edit-employee')">Hủy</button>
+        <button class="btn btn-success" onclick="saveEditedEmployee()">Lưu Thay đổi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: SỬA CHẤM CÔNG -->
+  <div class="modal-overlay" id="modal-edit-attendance">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Chỉnh sửa & Cập nhật Dòng Chấm công</h3>
+        <button class="modal-close" onclick="closeModal('modal-edit-attendance')">&times;</button>
+      </div>
+      <input type="hidden" id="edit-att-id">
+      <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+        <div class="form-group" style="grid-column: span 2;">
+          <label>Nhân viên</label>
+          <select id="edit-att-emp"></select>
+        </div>
+        <div class="form-group">
+          <label>Thời gian Check-in</label>
+          <input type="datetime-local" id="edit-att-in" onchange="recalcEditModalHours()">
+        </div>
+        <div class="form-group">
+          <label>Thời gian Check-out</label>
+          <input type="datetime-local" id="edit-att-out" onchange="recalcEditModalHours()">
+        </div>
+        <div class="form-group">
+          <label>Đổi Ảnh Check-in (Tự động đọc lại giờ)</label>
+          <input type="file" id="edit-att-in-file" accept="image/*" onchange="analyzeUploadedImage(this, null, 'edit-att-in', true)">
+        </div>
+        <div class="form-group">
+          <label>Đổi Ảnh Check-out (Tự động đọc lại giờ)</label>
+          <input type="file" id="edit-att-out-file" accept="image/*" onchange="analyzeUploadedImage(this, null, 'edit-att-out', true)">
+        </div>
+        <div class="form-group">
+          <label>Tổng giờ làm (Giờ)</label>
+          <input type="number" step="0.01" id="edit-att-hours">
+        </div>
+        <div class="form-group">
+          <label>Đơn giá Lương / giờ (VNĐ)</label>
+          <input type="number" id="edit-att-rate">
+        </div>
+        <div class="form-group" style="grid-column: span 2;">
+          <label>Ghi chú</label>
+          <input type="text" id="edit-att-note">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" onclick="closeModal('modal-edit-attendance')">Hủy</button>
+        <button class="btn btn-success" onclick="saveEditedAttendance()">Cập nhật Chấm công</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: GOOGLE DRIVE -->
+  <div class="modal-overlay" id="modal-drive-backup">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Lưu trữ & Backup lên Google Drive</h3>
+        <button class="modal-close" onclick="closeModal('modal-drive-backup')">&times;</button>
+      </div>
+      <div style="font-size:13px; line-height:1.6; color:var(--text-secondary); margin-bottom:14px;">
+        Bạn có thể sao lưu theo 2 cách:
+        <br>1. <strong>Tải trực tiếp file Backup (`.json`)</strong> vào thư mục <em>Google Drive for Desktop</em> hoặc tải lên Drive thủ công.
+        <br>2. <strong>Tự động đẩy lên Google Drive</strong> qua đường dẫn Google Apps Script Web App URL.
+      </div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>Google Apps Script Webhook URL (Tùy chọn để đẩy tự động lên Drive)</label>
+        <input type="url" id="drive-webhook-url" placeholder="https://script.google.com/macros/s/.../exec">
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="exportBackupJSON()">⬇ Tải File Backup Về Máy</button>
+        <button class="btn btn-success" onclick="uploadBackupToGoogleDrive()">☁ Đẩy Lên Google Drive Ngay</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'IPOS_HRM_PRO_OCR_V3';
+
+    const defaultState = {
+      employees: [
+        { id: 'NV01', name: 'Nguyễn Hoàng Anh', rate: 35000, bank: 'Techcombank', account: '190366889901' },
+        { id: 'NV02', name: 'Trần Khánh Linh', rate: 40000, bank: 'Vietcombank', account: '001100445566' },
+        { id: 'NV03', name: 'Vũ Vinh Sơn', rate: 25000, bank: 'MB Bank', account: '889900112233' }
+      ],
+      attendance: [
+        {
+          id: 'ATT_SAMPLE_1',
+          empId: 'NV03',
+          checkInTime: new Date(2026, 9, 26, 16, 40, 0).getTime(),
+          checkOutTime: new Date(2026, 9, 26, 19, 23, 0).getTime(),
+          checkInThumb: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><rect width="50" height="50" fill="%231A73E8"/><text x="50%" y="55%" fill="white" font-size="10" text-anchor="middle">16:40</text></svg>',
+          checkOutThumb: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><rect width="50" height="50" fill="%2312B5CB"/><text x="50%" y="55%" fill="white" font-size="10" text-anchor="middle">19:23</text></svg>',
+          hours: 2.72,
+          rate: 25000,
+          note: 'Đọc tự động từ ảnh: 16:40 đến 19:23 (26/10/2026)'
+        }
+      ],
+      evaluations: [],
+      driveWebhookUrl: ''
+    };
+
+    let state = loadState();
+
+    function loadState() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) return JSON.parse(saved);
+      } catch (e) {
+        console.warn('Không thể đọc localStorage:', e);
+      }
+      return JSON.parse(JSON.stringify(defaultState));
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        console.warn('Dung lượng lưu trữ lớn:', e);
+      }
+    }
+
+    function fileToDataURL(file) {
+      return new Promise((resolve) => {
+        if (!file) return resolve(null);
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function formatDateTime(ms) {
+      const d = new Date(ms);
+      const pad = n => n < 10 ? '0' + n : n;
+      return `${pad(d.getHours())}:${pad(d.getMinutes())} (${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()})`;
+    }
+
+    function msToDatetimeLocal(ms) {
+      const d = new Date(ms);
+      const pad = n => n < 10 ? '0' + n : n;
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function formatVND(num) {
+      return Math.round(num).toLocaleString('vi-VN') + ' VNĐ';
+    }
+
+    /* =========================================================================
+       BỘ XỬ LÝ ĐỌC ẢNH THÔNG MINH (AI OCR TESSERACT + EXIF METADATA)
+       Đọc trực tiếp dòng chữ "lúc 16:40 Thứ Hai, ngày 26 tháng 10, 2026" trong ảnh
+       ========================================================================= */
+    function parseTimestampFromOCRText(rawText) {
+      if (!rawText) return null;
+      // Chuẩn hóa khoảng trắng và xuống dòng
+      const text = rawText.replace(/\r?\n/g, ' ').replace(/\s+/g, ' ');
+      console.log('Văn bản AI đọc được từ ảnh:', text);
+
+      let hour = null, minute = null, day = null, month = null, year = null;
+
+      // 1. Tìm giờ:phút theo mẫu "lúc 16:40", "16:40", "19:23"
+      const timeRegex = /(?:lúc|luc|time|at)?\s*\b([01]?\d|2[0-3])\s*[:.]\s*([0-5]\d)\b/gi;
+      let timeMatches = [...text.matchAll(timeRegex)];
+      // Ưu tiên chuỗi có chữ "lúc" đứng trước (chuẩn iOS Tiếng Việt)
+      const lucMatch = text.match(/(?:lúc|luc)\s*([01]?\d|2[0-3])\s*[:.]\s*([0-5]\d)/i);
+      if (lucMatch) {
+        hour = parseInt(lucMatch[1], 10);
+        minute = parseInt(lucMatch[2], 10);
+      } else if (timeMatches.length > 0) {
+        hour = parseInt(timeMatches[0][1], 10);
+        minute = parseInt(timeMatches[0][2], 10);
+      }
+
+      // 2. Tìm Ngày Tháng Năm theo mẫu iOS Tiếng Việt: "ngày 26 tháng 10, 2026" hoặc "26 tháng 10 2026"
+      const vnDateMatch = text.match(/(?:ngày|ngay)?\s*(\d{1,2})\s*(?:tháng|thang|thg)\s*(\d{1,2})[\s,./-]*(\d{4})/i);
+      // Hoặc mẫu DD/MM/YYYY hay YYYY-MM-DD
+      const slashDateMatch = text.match(/\b(\d{1,2})[/-](\d{1,2})[/-](20\d{2})\b/);
+      const isoDateMatch = text.match(/\b(20\d{2})[/-](\d{1,2})[/-](\d{1,2})\b/);
+
+      if (vnDateMatch) {
+        day = parseInt(vnDateMatch[1], 10);
+        month = parseInt(vnDateMatch[2], 10);
+        year = parseInt(vnDateMatch[3], 10);
+      } else if (slashDateMatch) {
+        day = parseInt(slashDateMatch[1], 10);
+        month = parseInt(slashDateMatch[2], 10);
+        year = parseInt(slashDateMatch[3], 10);
+      } else if (isoDateMatch) {
+        year = parseInt(isoDateMatch[1], 10);
+        month = parseInt(isoDateMatch[2], 10);
+        day = parseInt(isoDateMatch[3], 10);
+      }
+
+      if (hour !== null && minute !== null) {
+        const now = new Date();
+        const finalYear = year || now.getFullYear();
+        const finalMonth = (month ? month - 1 : now.getMonth());
+        const finalDay = day || now.getDate();
+        const parsedDate = new Date(finalYear, finalMonth, finalDay, hour, minute, 0);
+        if (!isNaN(parsedDate.getTime())) {
+          return parsedDate.getTime();
+        }
+      }
+      return null;
+    }
+
+    function readExifDateTime(file) {
+      return new Promise((resolve) => {
+        if (!window.EXIF) return resolve(null);
+        EXIF.getData(file, function() {
+          const exifDate = EXIF.getTag(this, 'DateTimeOriginal') || EXIF.getTag(this, 'DateTime');
+          if (exifDate) {
+            // Định dạng EXIF chuẩn: "YYYY:MM:DD HH:MM:SS"
+            const parts = exifDate.split(/[: ]/);
+            if (parts.length >= 5) {
+              const d = new Date(
+                parseInt(parts[0], 10),
+                parseInt(parts[1], 10) - 1,
+                parseInt(parts[2], 10),
+                parseInt(parts[3], 10),
+                parseInt(parts[4], 10)
+              );
+              if (!isNaN(d.getTime())) return resolve(d.getTime());
+            }
+          }
+          resolve(null);
+        });
+      });
+    }
+
+    async function analyzeUploadedImage(input, statusElementId, targetInputId, isEditModal = false) {
+      const statusEl = statusElementId ? document.getElementById(statusElementId) : null;
+      if (!input.files || !input.files[0]) return;
+      const file = input.files[0];
+
+      if (statusEl) {
+        statusEl.className = 'ocr-status scanning';
+        statusEl.textContent = '⏳ AI đang quét ảnh để đọc thời gian làm việc...';
+      }
+
+      try {
+        // Bước 1: Kiểm tra EXIF gốc từ Camera trước
+        let detectedTime = await readExifDateTime(file);
+        let sourceType = 'EXIF Camera gốc';
+
+        // Bước 2: Dùng AI OCR (Tesseract.js) quét chữ ngày giờ bên trong bức ảnh (VD: "lúc 16:40 Thứ Hai, ngày 26 tháng 10, 2026")
+        if (!detectedTime && window.Tesseract) {
+          const result = await Tesseract.recognize(file, 'vie+eng');
+          const ocrTime = parseTimestampFromOCRText(result.data.text);
+          if (ocrTime) {
+            detectedTime = ocrTime;
+            sourceType = 'Đọc chữ trong ảnh (AI OCR)';
+          }
+        }
+
+        // Bước 3: Nếu trong ảnh không có chữ ngày giờ và không có EXIF thì mới dùng lastModified
+        if (!detectedTime) {
+          detectedTime = file.lastModified;
+          sourceType = 'Thời gian file thiết bị';
+        }
+
+        if (targetInputId) {
+          document.getElementById(targetInputId).value = msToDatetimeLocal(detectedTime);
+        }
+
+        if (statusEl) {
+          statusEl.className = 'ocr-status success';
+          statusEl.textContent = `✓ Đã đọc (${sourceType}): ${formatDateTime(detectedTime)}`;
+        }
+
+        if (isEditModal) {
+          recalcEditModalHours();
+        } else {
+          updateLiveDurationPreview();
+        }
+      } catch (err) {
+        console.error('Lỗi đọc ảnh:', err);
+        const fallback = file.lastModified || Date.now();
+        if (targetInputId) document.getElementById(targetInputId).value = msToDatetimeLocal(fallback);
+        if (statusEl) {
+          statusEl.className = 'ocr-status';
+          statusEl.textContent = `Giờ file: ${formatDateTime(fallback)}`;
+        }
+        updateLiveDurationPreview();
+      }
+    }
+
+    function updateLiveDurationPreview() {
+      const inVal = document.getElementById('att-manual-in').value;
+      const outVal = document.getElementById('att-manual-out').value;
+      const textEl = document.getElementById('live-calc-text');
+      const hoursEl = document.getElementById('live-calc-hours');
+
+      if (!inVal || !outVal) {
+        textEl.textContent = 'Hãy tải đủ ảnh Check-in và Check-out (hoặc chọn giờ) để tính tổng thời gian làm việc.';
+        hoursEl.textContent = '0.00 giờ';
+        return;
+      }
+
+      const inMs = new Date(inVal).getTime();
+      const outMs = new Date(outVal).getTime();
+      const diffMinutes = Math.round((outMs - inMs) / 60000);
+      const absMinutes = Math.abs(diffMinutes);
+      const hrs = Math.floor(absMinutes / 60);
+      const mins = absMinutes % 60;
+      const decimalHours = (absMinutes / 60).toFixed(2);
+
+      textEl.innerHTML = `Từ <strong>${formatDateTime(Math.min(inMs, outMs))}</strong> đến <strong>${formatDateTime(Math.max(inMs, outMs))}</strong> (${hrs} tiếng ${mins} phút)`;
+      hoursEl.textContent = `${decimalHours} giờ`;
+    }
+
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      btn.classList.add('active');
+      renderAll();
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+    }
+
+    /* ==================== 1. QUẢN LÝ NHÂN VIÊN ==================== */
+    function addEmployee() {
+      const name = document.getElementById('new-emp-name').value.trim();
+      const rate = parseFloat(document.getElementById('new-emp-rate').value) || 25000;
+      const bank = document.getElementById('new-emp-bank').value.trim() || 'Chưa cập nhật';
+      const account = document.getElementById('new-emp-acc').value.trim() || 'Chưa cập nhật';
+      if (!name) return alert('Vui lòng nhập họ tên nhân viên!');
+
+      const nextNum = state.employees.length + 1;
+      const id = 'NV' + (nextNum < 10 ? '0' + nextNum : nextNum) + '_' + Date.now().toString().slice(-2);
+      state.employees.push({ id, name, rate, bank, account });
+
+      document.getElementById('new-emp-name').value = '';
+      document.getElementById('new-emp-bank').value = '';
+      document.getElementById('new-emp-acc').value = '';
+      saveState();
+      renderAll();
+    }
+
+    function openAddEmployeeModal() {
+      switchTab('tab-attendance', document.querySelectorAll('.tab-btn')[0]);
+      document.getElementById('new-emp-name').focus();
+    }
+
+    function openEditEmployeeModal(empId) {
+      const emp = state.employees.find(e => e.id === empId);
+      if (!emp) return;
+      document.getElementById('edit-emp-id').value = emp.id;
+      document.getElementById('edit-emp-name').value = emp.name;
+      document.getElementById('edit-emp-rate').value = emp.rate;
+      document.getElementById('edit-emp-bank').value = emp.bank;
+      document.getElementById('edit-emp-acc').value = emp.account;
+      document.getElementById('modal-edit-employee').classList.add('active');
+    }
+
+    function saveEditedEmployee() {
+      const id = document.getElementById('edit-emp-id').value;
+      const name = document.getElementById('edit-emp-name').value.trim();
+      const rate = parseFloat(document.getElementById('edit-emp-rate').value) || 0;
+      const bank = document.getElementById('edit-emp-bank').value.trim();
+      const account = document.getElementById('edit-emp-acc').value.trim();
+      const syncAtt = document.getElementById('edit-emp-sync-att').checked;
+
+      if (!name) return alert('Tên nhân viên không được để trống!');
+      const emp = state.employees.find(e => e.id === id);
+      if (emp) {
+        emp.name = name;
+        emp.rate = rate;
+        emp.bank = bank;
+        emp.account = account;
+        if (syncAtt) {
+          state.attendance.forEach(a => {
+            if (a.empId === id) a.rate = rate;
+          });
+        }
+      }
+      saveState();
+      closeModal('modal-edit-employee');
+      renderAll();
+    }
+
+    function deleteEmployee(empId) {
+      const emp = state.employees.find(e => e.id === empId);
+      if (!emp) return;
+      if (!confirm(`Bạn có chắc chắn muốn xóa nhân viên "${emp.name}" cùng các dữ liệu liên quan?`)) return;
+      state.employees = state.employees.filter(e => e.id !== empId);
+      state.attendance = state.attendance.filter(a => a.empId !== empId);
+      state.evaluations = state.evaluations.filter(ev => ev.empId !== empId);
+      saveState();
+      renderAll();
+    }
+
+    /* ==================== 2. QUẢN LÝ CHẤM CÔNG (KHÔNG ÉP CỨNG 4 GIỜ) ==================== */
+    async function recordAttendance() {
+      const empId = document.getElementById('att-emp-select').value;
+      const emp = state.employees.find(e => e.id === empId);
+      if (!emp) return alert('Vui lòng thêm hoặc chọn nhân viên trước!');
+
+      const inFile = document.getElementById('att-checkin-file').files[0];
+      const outFile = document.getElementById('att-checkout-file').files[0];
+      const manualIn = document.getElementById('att-manual-in').value;
+      const manualOut = document.getElementById('att-manual-out').value;
+
+      if (!manualIn || !manualOut) {
+        return alert('Vui lòng tải ảnh lên (để AI tự đọc giờ) hoặc kiểm tra lại ô Giờ Check-in / Check-out!');
+      }
+
+      let t1 = new Date(manualIn).getTime();
+      let t2 = new Date(manualOut).getTime();
+
+      // Tự động sắp xếp giờ nhỏ hơn là Check-in, giờ lớn hơn là Check-out nếu người dùng chọn ngược ảnh
+      const checkInTime = Math.min(t1, t2);
+      const checkOutTime = Math.max(t1, t2);
+
+      // Tính chính xác số giờ làm việc thực tế (Không còn ép về 4.00 giờ)
+      const diffHours = (checkOutTime - checkInTime) / 3600000;
+      if (diffHours <= 0) {
+        return alert('Thời gian Check-in và Check-out đang trùng nhau (0 giờ). Vui lòng kiểm tra lại ảnh hoặc chỉnh lại giờ!');
+      }
+
+      const note = document.getElementById('att-note').value.trim() || 'Đã xác thực thời gian từ ảnh';
+
+      const defaultInSvg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><rect width="50" height="50" fill="%231A73E8"/><text x="50%" y="55%" fill="white" font-size="10" text-anchor="middle">IN</text></svg>';
+      const defaultOutSvg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><rect width="50" height="50" fill="%2312B5CB"/><text x="50%" y="55%" fill="white" font-size="10" text-anchor="middle">OUT</text></svg>';
+
+      const checkInThumb = (await fileToDataURL(inFile)) || defaultInSvg;
+      const checkOutThumb = (await fileToDataURL(outFile)) || defaultOutSvg;
+
+      state.attendance.unshift({
+        id: 'ATT_' + Date.now(),
+        empId,
+        checkInTime,
+        checkOutTime,
+        checkInThumb,
+        checkOutThumb,
+        hours: parseFloat(diffHours.toFixed(2)),
+        rate: emp.rate,
+        note
+      });
+
+      document.getElementById('att-checkin-file').value = '';
+      document.getElementById('att-checkout-file').value = '';
+      document.getElementById('checkin-meta-preview').textContent = 'Chưa chọn ảnh';
+      document.getElementById('checkout-meta-preview').textContent = 'Chưa chọn ảnh';
+      document.getElementById('att-note').value = '';
+      saveState();
+      renderAll();
+    }
+
+    function openEditAttendanceModal(attId) {
+      const row = state.attendance.find(a => a.id === attId);
+      if (!row) return;
+
+      const empSelect = document.getElementById('edit-att-emp');
+      empSelect.innerHTML = state.employees.map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('');
+      empSelect.value = row.empId;
+
+      document.getElementById('edit-att-id').value = row.id;
+      document.getElementById('edit-att-in').value = msToDatetimeLocal(row.checkInTime);
+      document.getElementById('edit-att-out').value = msToDatetimeLocal(row.checkOutTime);
+      document.getElementById('edit-att-hours').value = row.hours;
+      document.getElementById('edit-att-rate').value = row.rate;
+      document.getElementById('edit-att-note').value = row.note;
+      document.getElementById('edit-att-in-file').value = '';
+      document.getElementById('edit-att-out-file').value = '';
+
+      document.getElementById('modal-edit-attendance').classList.add('active');
+    }
+
+    function recalcEditModalHours() {
+      const inVal = document.getElementById('edit-att-in').value;
+      const outVal = document.getElementById('edit-att-out').value;
+      if (inVal && outVal) {
+        const diff = Math.abs(new Date(outVal).getTime() - new Date(inVal).getTime()) / 3600000;
+        document.getElementById('edit-att-hours').value = diff.toFixed(2);
+      }
+    }
+
+    async function saveEditedAttendance() {
+      const attId = document.getElementById('edit-att-id').value;
+      const row = state.attendance.find(a => a.id === attId);
+      if (!row) return;
+
+      row.empId = document.getElementById('edit-att-emp').value;
+      const inVal = document.getElementById('edit-att-in').value;
+      const outVal = document.getElementById('edit-att-out').value;
+      if (inVal) row.checkInTime = new Date(inVal).getTime();
+      if (outVal) row.checkOutTime = new Date(outVal).getTime();
+
+      row.hours = parseFloat(document.getElementById('edit-att-hours').value) || 0;
+      row.rate = parseFloat(document.getElementById('edit-att-rate').value) || 0;
+      row.note = document.getElementById('edit-att-note').value.trim();
+
+      const newInFile = document.getElementById('edit-att-in-file').files[0];
+      const newOutFile = document.getElementById('edit-att-out-file').files[0];
+      if (newInFile) row.checkInThumb = await fileToDataURL(newInFile);
+      if (newOutFile) row.checkOutThumb = await fileToDataURL(newOutFile);
+
+      saveState();
+      closeModal('modal-edit-attendance');
+      renderAll();
+    }
+
+    function deleteAttendance(attId) {
+      if (!confirm('Bạn có chắc chắn muốn xóa dòng chấm công này?')) return;
+      state.attendance = state.attendance.filter(a => a.id !== attId);
+      saveState();
+      renderAll();
+    }
+
+    /* ==================== 3. THI ĐUA THƯỞNG / PHẠT ==================== */
+    async function submitEndShiftReport() {
+      const empId = document.getElementById('eval-emp-select').value;
+      const file = document.getElementById('eval-room-photo').files[0];
+      const progress = parseInt(document.getElementById('eval-progress').value) || 100;
+      const issues = document.getElementById('eval-issues').value.trim() || 'Không có vấn đề phát sinh';
+      const type = document.getElementById('eval-type').value;
+      const amount = parseFloat(document.getElementById('eval-amount').value) || 0;
+
+      const photoTime = file ? file.lastModified : Date.now();
+      const defaultRoomSvg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><rect width="50" height="50" fill="%2381C995"/><text x="50%" y="55%" fill="white" font-size="9" text-anchor="middle">ROOM</text></svg>';
+      const photoThumb = (await fileToDataURL(file)) || defaultRoomSvg;
+
+      state.evaluations.unshift({
+        id: 'EV_' + Date.now(),
+        empId,
+        photoTime,
+        photoThumb,
+        progress,
+        issues,
+        type,
+        amount
+      });
+      document.getElementById('eval-room-photo').value = '';
+      document.getElementById('room-meta-preview').textContent = '';
+      document.getElementById('eval-issues').value = '';
+      saveState();
+      renderAll();
+    }
+
+    function deleteEvaluation(evId) {
+      if (!confirm('Xóa bản ghi thưởng/phạt này?')) return;
+      state.evaluations = state.evaluations.filter(ev => ev.id !== evId);
+      saveState();
+      renderAll();
+    }
+
+    /* ==================== 4. BACKUP & XUẤT SHEET CUỐI THÁNG ==================== */
+    function exportBackupJSON() {
+      const backupPayload = {
+        exportedAt: new Date().toISOString(),
+        system: 'iPOS HRM Cloud Pro',
+        data: state
+      };
+      const blob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const dateStr = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `iPOS_HRM_Backup_${dateStr}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importBackupJSON(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          const restoredState = parsed.data || parsed;
+          if (!restoredState.employees || !restoredState.attendance) {
+            return alert('File JSON không đúng định dạng Backup của iPOS HRM!');
+          }
+          state = restoredState;
+          saveState();
+          renderAll();
+          alert('Đã khôi phục dữ liệu thành công!');
+        } catch (err) {
+          alert('Lỗi đọc file Backup: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function openDriveModal() {
+      document.getElementById('drive-webhook-url').value = state.driveWebhookUrl || '';
+      document.getElementById('modal-drive-backup').classList.add('active');
+    }
+
+    async function uploadBackupToGoogleDrive() {
+      const webhookUrl = document.getElementById('drive-webhook-url').value.trim();
+      state.driveWebhookUrl = webhookUrl;
+      saveState();
+
+      if (!webhookUrl) {
+        exportBackupJSON();
+        alert('Đã tải file Backup (.json) về máy!');
+        return;
+      }
+
+      try {
+        await fetch(webhookUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            exportedAt: new Date().toISOString(),
+            system: 'iPOS HRM Cloud Pro',
+            data: state
+          })
+        });
+        alert('Đã gửi bản sao lưu lên Google Drive thành công!');
+        closeModal('modal-drive-backup');
+      } catch (err) {
+        exportBackupJSON();
+      }
+    }
+
+    function exportMonthlySheet() {
+      const monthVal = document.getElementById('export-month-picker')?.value || '2026-10';
+      const [yearFilter, monthFilter] = monthVal.split('-').map(Number);
+
+      let csvRows = [];
+      csvRows.push([`BẢNG TỔNG HỢP LƯƠNG & CHẤM CÔNG CUỐI THÁNG (${monthVal})`]);
+      csvRows.push([`Ngày xuất báo cáo: ${formatDateTime(Date.now())}`]);
+      csvRows.push([]);
+      csvRows.push([
+        'Mã NV',
+        'Họ và Tên Nhân viên',
+        'Ngân hàng',
+        'Số Tài khoản',
+        'Số Ca Làm việc',
+        'Tổng Giờ công',
+        'Lương Cố định/Giờ (VNĐ)',
+        'Lương Cơ bản (VNĐ)',
+        'Tổng Thưởng (VNĐ)',
+        'Tổng Phạt (VNĐ)',
+        'Thực Lĩnh Cuối Tháng (VNĐ)'
+      ]);
+
+      let grandTotalHours = 0;
+      let grandTotalNet = 0;
+
+      state.employees.forEach(emp => {
+        const empAtt = state.attendance.filter(a => {
+          const d = new Date(a.checkInTime);
+          return a.empId === emp.id && (!yearFilter || (d.getFullYear() === yearFilter && (d.getMonth() + 1) === monthFilter));
+        });
+        const empEval = state.evaluations.filter(ev => {
+          const d = new Date(ev.photoTime);
+          return ev.empId === emp.id && (!yearFilter || (d.getFullYear() === yearFilter && (d.getMonth() + 1) === monthFilter));
+        });
+
+        const totalHours = empAtt.reduce((s, a) => s + a.hours, 0);
+        const basePay = empAtt.reduce((s, a) => s + (a.hours * a.rate), 0);
+        const reward = empEval.filter(e => e.type === 'reward').reduce((s, e) => s + e.amount, 0);
+        const penalty = empEval.filter(e => e.type === 'penalty').reduce((s, e) => s + e.amount, 0);
+        const netPay = basePay + reward - penalty;
+
+        grandTotalHours += totalHours;
+        grandTotalNet += netPay;
+
+        csvRows.push([
+          emp.id,
+          emp.name,
+          emp.bank,
+          `'${emp.account}`,
+          empAtt.length,
+          totalHours.toFixed(2),
+          Math.round(emp.rate),
+          Math.round(basePay),
+          Math.round(reward),
+          Math.round(penalty),
+          Math.round(netPay)
+        ]);
+      });
+
+      csvRows.push([]);
+      csvRows.push(['TỔNG CỘNG TOÀN HỆ THỐNG', '', '', '', '', grandTotalHours.toFixed(2), '', '', '', '', Math.round(grandTotalNet)]);
+      csvRows.push([]);
+      csvRows.push(['CHI TIẾT NHẬT KÝ CHẤM CÔNG TRONG THÁNG']);
+      csvRows.push(['Mã Chấm công', 'Mã NV', 'Tên Nhân viên', 'Giờ Check-in', 'Giờ Check-out', 'Số Giờ làm', 'Đơn giá/Giờ', 'Thành tiền (VNĐ)', 'Ghi chú']);
+
+      state.attendance.forEach(a => {
+        const emp = state.employees.find(e => e.id === a.empId) || { name: 'Không xác định' };
+        csvRows.push([
+          a.id,
+          a.empId,
+          emp.name,
+          formatDateTime(a.checkInTime),
+          formatDateTime(a.checkOutTime),
+          a.hours.toFixed(2),
+          Math.round(a.rate),
+          Math.round(a.hours * a.rate),
+          a.note
+        ]);
+      });
+
+      downloadCSV(csvRows, `Bang_Tong_Hop_Luong_Thang_${monthVal}.csv`);
+    }
+
+    function exportAttendanceDetailSheet() {
+      let csvRows = [
+        ['Mã Chấm công', 'Mã NV', 'Họ và Tên', 'Thời gian Check-in', 'Thời gian Check-out', 'Tổng Giờ làm', 'Lương/giờ (VNĐ)', 'Thành tiền (VNĐ)', 'Ghi chú']
+      ];
+      state.attendance.forEach(a => {
+        const emp = state.employees.find(e => e.id === a.empId) || { name: 'Không xác định' };
+        csvRows.push([
+          a.id,
+          a.empId,
+          emp.name,
+          formatDateTime(a.checkInTime),
+          formatDateTime(a.checkOutTime),
+          a.hours.toFixed(2),
+          Math.round(a.rate),
+          Math.round(a.hours * a.rate),
+          a.note
+        ]);
+      });
+      downloadCSV(csvRows, `Chi_Tiet_Cham_Cong_${new Date().toISOString().slice(0, 10)}.csv`);
+    }
+
+    function downloadCSV(rows, filename) {
+      const escapeCell = cell => {
+        const str = String(cell ?? '').replace(/"/g, '""');
+        return `"${str}"`;
+      };
+      const csvContent = '\uFEFF' + rows.map(r => r.map(escapeCell).join(',')).join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    /* ==================== RENDER GIAO DIỆN ==================== */
+    function renderAll() {
+      const selects = ['att-emp-select', 'eval-emp-select'];
+      selects.forEach(selId => {
+        const el = document.getElementById(selId);
+        if (!el) return;
+        const currentVal = el.value;
+        el.innerHTML = state.employees.map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('');
+        if (currentVal && state.employees.some(e => e.id === currentVal)) el.value = currentVal;
+      });
+
+      const attBody = document.getElementById('attendance-table-body');
+      attBody.innerHTML = state.attendance.map(row => {
+        const emp = state.employees.find(e => e.id === row.empId) || { name: 'Không xác định' };
+        const totalMoney = row.hours * row.rate;
+        return `
+          <tr>
+            <td><strong>${emp.name}</strong><br><span style="color:var(--text-secondary);font-size:11px;">Mã: ${row.empId}</span></td>
+            <td>
+              <div class="thumb-box">
+                <img src="${row.checkInThumb}" class="thumb-img" alt="Check-in">
+                <div>
+                  <div style="font-size:12px;">Check-in</div>
+                  <span class="timestamp-tag">${formatDateTime(row.checkInTime)}</span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="thumb-box">
+                <img src="${row.checkOutThumb}" class="thumb-img" alt="Check-out">
+                <div>
+                  <div style="font-size:12px;">Check-out</div>
+                  <span class="timestamp-tag">${formatDateTime(row.checkOutTime)}</span>
+                </div>
+              </div>
+            </td>
+            <td><strong style="color:var(--tech-blue); font-size:14px;">${row.hours.toFixed(2)} giờ</strong></td>
+            <td>${formatVND(row.rate)}/h</td>
+            <td><strong style="color:var(--tech-mint);">${formatVND(totalMoney)}</strong></td>
+            <td>${row.note}</td>
+            <td>
+              <div class="action-group">
+                <button class="btn btn-warning btn-sm" onclick="openEditAttendanceModal('${row.id}')">✎ Sửa</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteAttendance('${row.id}')">✕ Xóa</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      let systemTotalHours = 0;
+      let systemTotalPayroll = 0;
+
+      const empBody = document.getElementById('employee-table-body');
+      empBody.innerHTML = state.employees.map(emp => {
+        const empAtt = state.attendance.filter(a => a.empId === emp.id);
+        const totalHours = empAtt.reduce((sum, a) => sum + a.hours, 0);
+        const baseSalary = empAtt.reduce((sum, a) => sum + (a.hours * a.rate), 0);
+
+        const empEval = state.evaluations.filter(ev => ev.empId === emp.id);
+        const totalReward = empEval.filter(ev => ev.type === 'reward').reduce((s, ev) => s + ev.amount, 0);
+        const totalPenalty = empEval.filter(ev => ev.type === 'penalty').reduce((s, ev) => s + ev.amount, 0);
+
+        const netIncome = baseSalary + totalReward - totalPenalty;
+        systemTotalHours += totalHours;
+        systemTotalPayroll += netIncome;
+
+        return `
+          <tr>
+            <td><strong>${emp.name}</strong><br><span style="color:var(--text-secondary);font-size:11px;">Mã: ${emp.id}</span></td>
+            <td><strong>${emp.bank}</strong><br><span style="color:var(--text-secondary);font-size:12px;">STK: ${emp.account}</span></td>
+            <td>${formatVND(emp.rate)}/h<br><span style="color:var(--tech-blue);font-weight:600;">Đã làm: ${totalHours.toFixed(2)} giờ (${empAtt.length} ca)</span></td>
+            <td><strong>${formatVND(baseSalary)}</strong></td>
+            <td>
+              <span class="badge badge-reward">+${formatVND(totalReward)}</span>
+              <span class="badge badge-penalty">-${formatVND(totalPenalty)}</span>
+            </td>
+            <td><strong style="color:var(--tech-blue-dark); font-size:15px;">${formatVND(netIncome)}</strong></td>
+            <td>
+              <div class="action-group">
+                <button class="btn btn-warning btn-sm" onclick="openEditEmployeeModal('${emp.id}')">✎ Chỉnh sửa</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteEmployee('${emp.id}')">✕ Xóa</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('kpi-staff-count').textContent = `${state.employees.length} Nhân viên`;
+      document.getElementById('kpi-total-hours').textContent = `${systemTotalHours.toFixed(2)} Giờ`;
+      document.getElementById('kpi-total-payroll').textContent = formatVND(systemTotalPayroll);
+      document.getElementById('kpi-total-records').textContent = `${state.attendance.length} Lượt`;
+
+      const evalBody = document.getElementById('eval-table-body');
+      evalBody.innerHTML = state.evaluations.map(ev => {
+        const emp = state.employees.find(e => e.id === ev.empId) || { name: 'Không xác định' };
+        const badgeHtml = ev.type === 'reward'
+          ? `<span class="badge badge-reward">Thưởng +${formatVND(ev.amount)}</span>`
+          : `<span class="badge badge-penalty">Phạt -${formatVND(ev.amount)}</span>`;
+        return `
+          <tr>
+            <td><strong>${emp.name}</strong></td>
+            <td>
+              <div class="thumb-box">
+                <img src="${ev.photoThumb}" class="thumb-img" alt="Room">
+                <span class="timestamp-tag">${formatDateTime(ev.photoTime)}</span>
+              </div>
+            </td>
+            <td><strong>${ev.progress}%</strong> hoàn thành</td>
+            <td>${ev.issues}</td>
+            <td>${badgeHtml}</td>
+            <td>
+              <button class="btn btn-danger btn-sm" onclick="deleteEvaluation('${ev.id}')">✕ Xóa</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    window.onload = () => {
+      renderAll();
+    };
+  </script>
+</body>
+</html>
