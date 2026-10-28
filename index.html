@@ -3,10 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>iPOS HRM Pro - Hệ thống Chấm công AI OCR & Phân quyền Nhân sự</title>
-  <!-- Thư viện AI OCR Tesseract.js để đọc chữ ngày giờ bên trong ảnh chụp màn hình -->
+  <title>iPOS HRM Cloud - Hệ thống Chấm công Đồng bộ Thời gian thực</title>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <!-- Thư viện EXIF-JS để đọc Metadata gốc của ảnh chụp camera -->
   <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
   <style>
     :root {
@@ -26,9 +24,27 @@
     body { background-color: var(--bg-main); color: var(--text-primary); padding-bottom: 50px; }
     .hidden { display: none !important; }
 
-    /* ==================== MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ ==================== */
+    /* Thanh trạng thái đồng bộ Cloud */
+    .sync-bar {
+      background: #0F2942;
+      color: #FFFFFF;
+      font-size: 12px;
+      padding: 6px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .sync-indicator { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+    .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #34A853; display: inline-block; }
+    .sync-dot.syncing { background: #FBBC04; animation: pulse 1s infinite; }
+    .sync-dot.offline { background: #EA4335; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+    /* Màn hình Đăng nhập / Đăng ký */
     .auth-wrapper {
-      min-height: 100vh;
+      min-height: calc(100vh - 30px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -43,20 +59,9 @@
       padding: 30px 28px;
       box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
     }
-    .auth-logo {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .auth-logo h1 {
-      font-size: 22px;
-      color: var(--tech-blue-dark);
-      letter-spacing: 0.5px;
-    }
-    .auth-logo p {
-      font-size: 13px;
-      color: var(--text-secondary);
-      margin-top: 4px;
-    }
+    .auth-logo { text-align: center; margin-bottom: 20px; }
+    .auth-logo h1 { font-size: 22px; color: var(--tech-blue-dark); letter-spacing: 0.5px; }
+    .auth-logo p { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
     .auth-tabs {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -82,13 +87,9 @@
       color: var(--tech-blue);
       box-shadow: 0 2px 5px rgba(0,0,0,0.08);
     }
-    .auth-form {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
+    .auth-form { display: flex; flex-direction: column; gap: 14px; }
 
-    /* ==================== HEADER & GIAO DIỆN CHÍNH ==================== */
+    /* Giao diện chính */
     .app-header {
       background: linear-gradient(135deg, var(--tech-blue-dark), var(--tech-blue));
       color: #FFFFFF;
@@ -202,12 +203,7 @@
     }
     .form-group input:focus, .form-group select:focus { border-color: var(--tech-blue); }
     
-    .ocr-status {
-      font-size: 11px;
-      font-weight: 600;
-      min-height: 16px;
-      color: var(--tech-blue);
-    }
+    .ocr-status { font-size: 11px; font-weight: 600; min-height: 16px; color: var(--tech-blue); }
     .ocr-status.scanning { color: var(--tech-orange); }
     .ocr-status.success { color: var(--tech-mint); }
 
@@ -334,12 +330,23 @@
 </head>
 <body>
 
-  <!-- ==================== MÀN HÌNH ĐĂNG NHẬP & ĐĂNG KÝ ==================== -->
+  <!-- THANH TRẠNG THÁI ĐỒNG BỘ ĐÁM MÂY -->
+  <div class="sync-bar">
+    <div class="sync-indicator">
+      <span class="sync-dot" id="sync-dot"></span>
+      <span id="sync-status-text">Đang kiểm tra kết nối đồng bộ đám mây...</span>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <button class="btn btn-outline" style="padding:3px 10px; font-size:11px;" onclick="pullFromCloud(true)">🔄 Tải dữ liệu mới nhất</button>
+    </div>
+  </div>
+
+  <!-- MÀN HÌNH ĐĂNG NHẬP & ĐĂNG KÝ -->
   <div id="auth-screen" class="auth-wrapper">
     <div class="auth-card">
       <div class="auth-logo">
         <h1>iPOS HRM CLOUD</h1>
-        <p>Hệ thống Chấm công AI OCR & Quản trị Nhân sự</p>
+        <p>Hệ thống Chấm công AI OCR & Đồng bộ Thời gian thực</p>
       </div>
 
       <div class="auth-tabs">
@@ -347,7 +354,6 @@
         <button class="auth-tab-btn" id="tab-btn-register" onclick="switchAuthTab('register')">Đăng ký Nhân viên</button>
       </div>
 
-      <!-- FORM ĐĂNG NHẬP -->
       <div id="form-login" class="auth-form">
         <div class="form-group">
           <label>Tên đăng nhập (Username)</label>
@@ -360,7 +366,6 @@
         <button class="btn" style="width:100%; padding:12px; margin-top:4px;" onclick="handleLogin()">Đăng nhập Hệ thống</button>
       </div>
 
-      <!-- FORM ĐĂNG KÝ TÀI KHOẢN NHÂN VIÊN MỚI -->
       <div id="form-register" class="auth-form hidden">
         <div class="form-group">
           <label>Họ và Tên Nhân viên (Ghi danh)</label>
@@ -382,31 +387,29 @@
           <label>Số tài khoản ngân hàng (Tùy chọn)</label>
           <input type="text" id="reg-acc" placeholder="VD: 190388492010">
         </div>
-        <button class="btn btn-success" style="width:100%; padding:12px; margin-top:4px;" onclick="handleRegister()">Hoàn tất Đăng ký & Ghi danh</button>
+        <button class="btn btn-success" style="width:100%; padding:12px; margin-top:4px;" onclick="handleRegister()">Hoàn tất Đăng ký & Đồng bộ Cloud</button>
       </div>
     </div>
   </div>
 
-  <!-- ==================== GIAO DIỆN ỨNG DỤNG CHÍNH ==================== -->
+  <!-- GIAO DIỆN ỨNG DỤNG CHÍNH -->
   <div id="app-screen" class="hidden">
     <header class="app-header">
       <div class="brand-title">
         <span>iPOS HRM CLOUD</span>
-        <span class="brand-badge">AI OCR & RBAC</span>
+        <span class="brand-badge">CLOUD SYNC</span>
         <span id="current-role-badge" class="role-badge-admin">ADMIN</span>
       </div>
       <div class="header-actions">
         <div class="user-welcome">
           <span>👤 Xin chào, <strong id="current-user-display">Admin</strong></span>
         </div>
-        <button class="btn btn-outline admin-only" onclick="exportBackupJSON()">⬇ Backup (.JSON)</button>
-        <button class="btn btn-outline admin-only" onclick="openDriveModal()">☁ Lưu Google Drive</button>
+        <button class="btn btn-outline admin-only" onclick="openDriveModal()">☁ Cấu hình Cloud Sync</button>
         <button class="btn btn-success" id="header-export-btn" style="padding:8px 14px; font-size:12px;" onclick="handleExportSheetAction()">📊 Xuất Sheet Tổng hợp Cuối tháng</button>
         <button class="btn btn-danger" style="padding:8px 12px; font-size:12px;" onclick="handleLogout()">Đăng xuất</button>
       </div>
     </header>
 
-    <!-- Thanh KPI tự động thích ứng theo quyền Admin / Nhân viên -->
     <section class="kpi-container">
       <div class="kpi-card">
         <div class="kpi-label" id="kpi-label-1">Tổng Nhân sự Hệ thống</div>
@@ -426,23 +429,21 @@
       </div>
     </section>
 
-    <!-- Thanh Điều hướng Phân hệ (Ẩn các tab quản trị đối với Nhân viên) -->
     <nav class="nav-tabs" id="main-nav-tabs">
       <button class="tab-btn active" onclick="switchTab('tab-attendance', this)">1. Chấm công Ảnh Gallery & Bảng Chấm công</button>
       <button class="tab-btn admin-only" onclick="switchTab('tab-employees', this)">2. Quản lý Nhân sự, Ngân hàng & Thu nhập</button>
       <button class="tab-btn admin-only" onclick="switchTab('tab-gamification', this)">3. Thi đua Thưởng/Phạt & Báo cáo Cuối ngày</button>
       <button class="tab-btn admin-only" onclick="switchTab('tab-accounts', this)">4. Quản lý Tài khoản & Cấp quyền Admin</button>
-      <button class="tab-btn admin-only" onclick="switchTab('tab-backup', this)">5. Sao lưu Google Drive & Xuất Sheet</button>
+      <button class="tab-btn admin-only" onclick="switchTab('tab-backup', this)">5. Cấu hình Đồng bộ Cloud & Xuất Sheet</button>
     </nav>
 
     <main class="main-container">
-      <!-- TAB 1: CHẤM CÔNG (HIỂN THỊ CHO CẢ ADMIN VÀ NHÂN VIÊN VỚI QUYỀN KHÁC NHAU) -->
+      <!-- TAB 1: CHẤM CÔNG -->
       <section id="tab-attendance" class="tab-panel active">
-        <!-- Thêm nhanh nhân viên: Chỉ Admin mới thấy -->
         <div class="card admin-only" id="admin-quick-add-emp">
           <div class="card-title">
             <span>Thêm Nhanh Hồ sơ Nhân viên Mới (Quyền Admin)</span>
-            <span style="font-size:12px; color:var(--text-secondary); font-weight:400;">Đồng bộ tự động với Bảng chấm công & Sổ lương</span>
+            <span style="font-size:12px; color:var(--text-secondary); font-weight:400;">Tự động đồng bộ lên Cloud cho toàn hệ thống</span>
           </div>
           <div class="form-grid">
             <div class="form-group">
@@ -465,11 +466,10 @@
           </div>
         </div>
 
-        <!-- Khu vực tải ảnh chấm công -->
         <div class="card">
           <div class="card-title">
             <span id="att-form-title">Ghi danh & Chấm công bằng Ảnh từ Gallery (AI Tự động Đọc Giờ Chụp)</span>
-            <span style="font-size:12px; color:var(--tech-mint); font-weight:600;" id="att-rule-badge">✓ Chỉ tính công trong tháng hiện tại</span>
+            <span style="font-size:12px; color:var(--tech-mint); font-weight:600;">✓ Tự động đồng bộ ngay về máy Admin</span>
           </div>
           <div class="form-grid">
             <div class="form-group">
@@ -501,18 +501,18 @@
             <button class="btn btn-secondary" id="btn-record-att" onclick="recordAttendance()">+ Xác nhận Chấm công</button>
           </div>
 
-          <div class="live-calc-banner" id="live-calc-banner">
+          <div class="live-calc-banner">
             <span>⏱ <strong>Thời gian làm việc đọc từ ảnh:</strong> <span id="live-calc-text">Hãy tải lên ảnh Check-in và Check-out từ Gallery để hệ thống đọc thời gian...</span></span>
             <span id="live-calc-hours" style="font-weight:700; color:var(--tech-blue-dark); font-size:15px;">0.00 giờ</span>
           </div>
         </div>
 
-        <!-- Bảng thống kê chấm công -->
         <div class="card">
           <div class="card-title">
             <span id="att-table-title">Bảng Thống kê Chấm công Chi tiết</span>
             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
               <input type="month" id="staff-month-filter" style="padding:5px 10px; border:1px solid var(--border-color); border-radius:6px; font-size:12px;" onchange="renderAll()">
+              <button class="btn btn-outline" style="color:var(--tech-blue); border-color:var(--tech-blue); padding:6px 10px;" onclick="pullFromCloud(true)">🔄 Làm mới dữ liệu</button>
               <button class="btn btn-success btn-sm" id="table-export-btn" onclick="handleExportSheetAction()">📊 Tải Bảng Chấm công Cuối tháng (.CSV)</button>
             </div>
           </div>
@@ -536,7 +536,7 @@
         </div>
       </section>
 
-      <!-- TAB 2: QUẢN LÝ NHÂN SỰ (CHỈ ADMIN) -->
+      <!-- TAB 2: QUẢN LÝ NHÂN SỰ (ADMIN) -->
       <section id="tab-employees" class="tab-panel admin-only">
         <div class="card">
           <div class="card-title">
@@ -562,7 +562,7 @@
         </div>
       </section>
 
-      <!-- TAB 3: THI ĐUA KHEN THƯỞNG / PHẠT (CHỈ ADMIN) -->
+      <!-- TAB 3: THI ĐUA (ADMIN) -->
       <section id="tab-gamification" class="tab-panel admin-only">
         <div class="card">
           <div class="card-title">Báo cáo Hình ảnh Toàn phòng Cuối giờ làm & Chấm điểm Thi đua Khen thưởng / Phạt</div>
@@ -619,7 +619,7 @@
         </div>
       </section>
 
-      <!-- TAB 4: QUẢN LÝ TÀI KHOẢN & CẤP QUYỀN ADMIN (CHỈ ADMIN) -->
+      <!-- TAB 4: QUẢN LÝ TÀI KHOẢN (ADMIN) -->
       <section id="tab-accounts" class="tab-panel admin-only">
         <div class="card">
           <div class="card-title">
@@ -676,13 +676,24 @@
         </div>
       </section>
 
-      <!-- TAB 5: BACKUP GOOGLE DRIVE & XUẤT FILE SHEET CUỐI THÁNG (CHỈ ADMIN) -->
+      <!-- TAB 5: CẤU HÌNH ĐỒNG BỘ CLOUD & XUẤT SHEET (ADMIN) -->
       <section id="tab-backup" class="tab-panel admin-only">
         <div class="card">
-          <div class="card-title">1. Xuất File Sheet Tổng hợp Lương & Chấm công Cuối tháng (Toàn hệ thống)</div>
-          <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px;">
-            Hệ thống sẽ tổng hợp toàn bộ dữ liệu Nhân sự, Tài khoản ngân hàng, Tổng giờ làm, Lương cơ bản, Thưởng/Phạt và Thực lĩnh cuối tháng kèm chi tiết từng ca chấm công ra file bảng tính chuẩn UTF-8 (Mở trực tiếp bằng <strong>Microsoft Excel</strong> hoặc tải lên <strong>Google Sheets</strong>).
+          <div class="card-title">1. Cấu hình Đồng bộ Đám mây Thời gian thực (Google Drive Cloud Sync)</div>
+          <p style="font-size:13px; color:var(--text-secondary); margin-bottom:14px;">
+            Dán đường dẫn <strong>Google Apps Script Web App URL</strong> vào ô bên dưới (hoặc gắn cố định vào biến <code>CLOUD_SYNC_URL</code> trong code trước khi up lên GitHub) để mọi thao tác chấm công của nhân viên tự động đồng bộ về máy bạn.
           </p>
+          <div class="form-grid">
+            <div class="form-group" style="grid-column: span 2;">
+              <label>Google Apps Script Web App URL (Database Cloud)</label>
+              <input type="url" id="tab-cloud-url-input" placeholder="https://script.google.com/macros/s/.../exec">
+            </div>
+            <button class="btn btn-success" onclick="saveCloudUrlFromTab()">💾 Lưu & Đồng bộ Ngay</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">2. Xuất File Sheet Tổng hợp Lương & Chấm công Cuối tháng (Toàn hệ thống)</div>
           <div class="form-grid" style="max-width: 750px;">
             <div class="form-group">
               <label>Chọn Tháng/Năm Xuất Báo cáo</label>
@@ -694,19 +705,15 @@
         </div>
 
         <div class="card">
-          <div class="card-title">2. Sao lưu (Backup) Dữ liệu Hệ thống & Đồng bộ Google Drive</div>
+          <div class="card-title">3. Sao lưu / Khôi phục File JSON Thủ công</div>
           <div class="form-grid">
             <div class="form-group">
-              <label>Tải File Lưu trữ về Máy / Thư mục Drive</label>
+              <label>Tải File Lưu trữ về Máy</label>
               <button class="btn" onclick="exportBackupJSON()">⬇ Xuất File Backup (.JSON)</button>
             </div>
             <div class="form-group">
               <label>Khôi phục Dữ liệu từ File Backup (.JSON)</label>
               <input type="file" id="restore-json-input" accept=".json" onchange="importBackupJSON(this)">
-            </div>
-            <div class="form-group">
-              <label>Đồng bộ Trực tiếp lên Google Drive Cloud</label>
-              <button class="btn btn-warning" onclick="openDriveModal()">☁ Cấu hình & Đẩy lên Google Drive</button>
             </div>
           </div>
         </div>
@@ -714,7 +721,7 @@
     </main>
   </div>
 
-  <!-- MODAL 1: SỬA NHÂN VIÊN (ADMIN) -->
+  <!-- MODAL 1: SỬA NHÂN VIÊN -->
   <div class="modal-overlay" id="modal-edit-employee">
     <div class="modal-box">
       <div class="modal-header">
@@ -741,7 +748,7 @@
         </div>
         <div class="form-group" style="flex-direction: row; align-items: center; gap: 8px; margin-top: 4px;">
           <input type="checkbox" id="edit-emp-sync-att" checked style="width:16px; height:16px;">
-          <label for="edit-emp-sync-att" style="margin:0; cursor:pointer;">Cập nhật mức lương/giờ mới này cho toàn bộ các lượt chấm công trước đó của nhân viên</label>
+          <label for="edit-emp-sync-att" style="margin:0; cursor:pointer;">Cập nhật mức lương/giờ mới này cho toàn bộ các lượt chấm công trước đó</label>
         </div>
       </div>
       <div class="modal-footer">
@@ -751,7 +758,7 @@
     </div>
   </div>
 
-  <!-- MODAL 2: SỬA CHẤM CÔNG (ADMIN) -->
+  <!-- MODAL 2: SỬA CHẤM CÔNG -->
   <div class="modal-overlay" id="modal-edit-attendance">
     <div class="modal-box">
       <div class="modal-header">
@@ -800,33 +807,37 @@
     </div>
   </div>
 
-  <!-- MODAL 3: GOOGLE DRIVE (ADMIN) -->
+  <!-- MODAL 3: GOOGLE DRIVE CLOUD SYNC -->
   <div class="modal-overlay" id="modal-drive-backup">
     <div class="modal-box">
       <div class="modal-header">
-        <h3>Lưu trữ & Backup lên Google Drive</h3>
+        <h3>Cấu hình Đồng bộ Đám mây (Google Drive Cloud Sync)</h3>
         <button class="modal-close" onclick="closeModal('modal-drive-backup')">&times;</button>
       </div>
       <div style="font-size:13px; line-height:1.6; color:var(--text-secondary); margin-bottom:14px;">
-        1. <strong>Tải trực tiếp file Backup (`.json`)</strong> vào thư mục <em>Google Drive</em>.
-        <br>2. <strong>Tự động đẩy lên Google Drive</strong> qua đường dẫn Google Apps Script Web App URL.
+        Khi gắn link Google Apps Script Web App vào đây (hoặc gắn vào biến <code>CLOUD_SYNC_URL</code> trong code trước khi đẩy lên GitHub), mọi lượt chấm công của nhân viên sẽ tự động gửi thẳng về Google Drive của bạn.
       </div>
       <div class="form-group" style="margin-bottom:14px;">
-        <label>Google Apps Script Webhook URL</label>
+        <label>Google Apps Script Web App URL</label>
         <input type="url" id="drive-webhook-url" placeholder="https://script.google.com/macros/s/.../exec">
       </div>
       <div class="modal-footer">
         <button class="btn" onclick="exportBackupJSON()">⬇ Tải File Backup Về Máy</button>
-        <button class="btn btn-success" onclick="uploadBackupToGoogleDrive()">☁ Đẩy Lên Google Drive Ngay</button>
+        <button class="btn btn-success" onclick="uploadBackupToGoogleDrive()">☁ Lưu URL & Đồng bộ Ngay</button>
       </div>
     </div>
   </div>
 
   <script>
-    const STORAGE_KEY = 'IPOS_HRM_RBAC_V4';
-    const SESSION_KEY = 'IPOS_HRM_CURRENT_USER_V4';
+    // =========================================================================
+    // DÁN LINK GOOGLE APPS SCRIPT WEB APP CỦA BẠN VÀO GIỮA CẶP NHÁY ĐƠN BÊN DƯỚI
+    // ĐỂ TẤT CẢ NHÂN VIÊN TRUY CẬP GITHUB PAGES ĐỀU TỰ ĐỘNG ĐỒNG BỘ VỀ DRIVE CỦA BẠN:
+    // =========================================================================
+    const CLOUD_SYNC_URL = ''; 
 
-    // Khởi tạo trạng thái mặc định với tài khoản admin1107 / 11072007edtech
+    const STORAGE_KEY = 'IPOS_HRM_RBAC_V5';
+    const SESSION_KEY = 'IPOS_HRM_CURRENT_USER_V5';
+
     const defaultState = {
       users: [
         {
@@ -862,49 +873,170 @@
         }
       ],
       evaluations: [],
-      driveWebhookUrl: ''
+      driveWebhookUrl: CLOUD_SYNC_URL
     };
 
     let state = loadState();
     let currentUser = null;
+    let isSyncing = false;
+
+    function getActiveCloudUrl() {
+      return (CLOUD_SYNC_URL && CLOUD_SYNC_URL.trim()) || (state.driveWebhookUrl && state.driveWebhookUrl.trim()) || '';
+    }
+
+    function updateSyncBanner(status, message) {
+      const dot = document.getElementById('sync-dot');
+      const text = document.getElementById('sync-status-text');
+      if (!dot || !text) return;
+      dot.className = 'sync-dot ' + (status === 'syncing' ? 'syncing' : (status === 'offline' ? 'offline' : ''));
+      text.textContent = message;
+    }
+
+    function ensureRootAdmin(targetState) {
+      if (!targetState.users) targetState.users = [];
+      const rootAdmin = targetState.users.find(u => u.username === 'admin1107');
+      if (!rootAdmin) {
+        targetState.users.unshift({
+          username: 'admin1107',
+          password: '11072007edtech',
+          role: 'admin',
+          fullName: 'Quản trị viên (Admin)',
+          empId: null
+        });
+      } else {
+        rootAdmin.password = '11072007edtech';
+        rootAdmin.role = 'admin';
+      }
+      if (CLOUD_SYNC_URL && !targetState.driveWebhookUrl) {
+        targetState.driveWebhookUrl = CLOUD_SYNC_URL;
+      }
+    }
 
     function loadState() {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
           const parsed = JSON.parse(saved);
-          // Đảm bảo tài khoản admin1107 luôn tồn tại đúng mật khẩu yêu cầu
-          if (!parsed.users) parsed.users = [];
-          const rootAdmin = parsed.users.find(u => u.username === 'admin1107');
-          if (!rootAdmin) {
-            parsed.users.unshift({
-              username: 'admin1107',
-              password: '11072007edtech',
-              role: 'admin',
-              fullName: 'Quản trị viên (Admin)',
-              empId: null
-            });
-          } else {
-            rootAdmin.password = '11072007edtech';
-            rootAdmin.role = 'admin';
-          }
+          ensureRootAdmin(parsed);
           return parsed;
         }
       } catch (e) {
         console.warn('Không thể đọc localStorage:', e);
       }
-      return JSON.parse(JSON.stringify(defaultState));
+      const copy = JSON.parse(JSON.stringify(defaultState));
+      ensureRootAdmin(copy);
+      return copy;
     }
 
-    function saveState() {
+    // Lưu cục bộ và tự động đẩy bản cập nhật lên Google Drive Cloud
+    async function saveState(pushToCloudServer = true) {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       } catch (e) {
         console.warn('Dung lượng lưu trữ lớn:', e);
       }
+      if (pushToCloudServer) {
+        await pushToCloud();
+      }
     }
 
-    /* ==================== XÁC THỰC ĐĂNG NHẬP / ĐĂNG KÝ / PHÂN QUYỀN ==================== */
+    // Tải dữ liệu mới nhất từ Cloud về máy
+    async function pullFromCloud(showAlert = false) {
+      const url = getActiveCloudUrl();
+      if (!url) {
+        updateSyncBanner('offline', 'Chế độ Offline (Chưa gắn link Google Apps Script Cloud Sync)');
+        return false;
+      }
+      if (isSyncing) return false;
+      isSyncing = true;
+      updateSyncBanner('syncing', 'Đang tải dữ liệu đồng bộ từ Cloud...');
+
+      try {
+        const res = await fetch(url + '?t=' + Date.now(), { method: 'GET', redirect: 'follow' });
+        const json = await res.json();
+        const remoteData = json.data || json;
+        if (remoteData && Array.isArray(remoteData.employees) && Array.isArray(remoteData.attendance)) {
+          const keepUrl = state.driveWebhookUrl || url;
+          state = remoteData;
+          state.driveWebhookUrl = keepUrl;
+          ensureRootAdmin(state);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          renderAll();
+          updateSyncBanner('online', `Đã đồng bộ Cloud lúc ${formatDateTime(Date.now())}`);
+          if (showAlert) alert('Đã cập nhật dữ liệu mới nhất từ Cloud!');
+          isSyncing = false;
+          return true;
+        } else {
+          // Nếu file trên Cloud vừa mới khởi tạo (chưa có dữ liệu), đẩy dữ liệu hiện tại lên
+          isSyncing = false;
+          await pushToCloud();
+          return true;
+        }
+      } catch (err) {
+        console.warn('Lỗi tải Cloud:', err);
+        updateSyncBanner('offline', 'Không thể kết nối Cloud (Đang dùng dữ liệu bộ nhớ máy)');
+        isSyncing = false;
+        return false;
+      }
+    }
+
+    // Đẩy dữ liệu từ máy nhân viên / Admin lên Cloud
+    async function pushToCloud() {
+      const url = getActiveCloudUrl();
+      if (!url) {
+        updateSyncBanner('offline', 'Chế độ Offline (Chưa gắn link Google Apps Script Cloud Sync)');
+        return false;
+      }
+      updateSyncBanner('syncing', 'Đang đồng bộ dữ liệu lên Cloud...');
+      try {
+        await fetch(url, {
+          method: 'POST',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            updatedAt: new Date().toISOString(),
+            system: 'iPOS HRM Cloud Sync V5',
+            data: state
+          })
+        });
+        updateSyncBanner('online', `Đã lưu & đồng bộ Cloud lúc ${formatDateTime(Date.now())}`);
+        return true;
+      } catch (err) {
+        console.warn('Lỗi đẩy Cloud:', err);
+        updateSyncBanner('offline', 'Lỗi đường truyền khi đẩy lên Cloud');
+        return false;
+      }
+    }
+
+    // Thuật toán nén ảnh Thumbnail siêu nhẹ (~15KB) để đồng bộ Cloud cực nhanh
+    function compressImageToDataURL(file, maxSize = 160, quality = 0.7) {
+      return new Promise((resolve) => {
+        if (!file) return resolve(null);
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let w = img.width, h = img.height;
+            if (w > h) {
+              if (w > maxSize) { h = Math.round(h * maxSize / w); w = maxSize; }
+            } else {
+              if (h > maxSize) { w = Math.round(w * maxSize / h); h = maxSize; }
+            }
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.onerror = () => resolve(e.target.result);
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    /* ==================== ĐĂNG NHẬP / ĐĂNG KÝ / PHÂN QUYỀN ==================== */
     function switchAuthTab(mode) {
       const loginForm = document.getElementById('form-login');
       const regForm = document.getElementById('form-register');
@@ -924,13 +1056,16 @@
       }
     }
 
-    function handleLogin() {
+    async function handleLogin() {
       const username = document.getElementById('login-username').value.trim();
       const password = document.getElementById('login-password').value;
 
       if (!username || !password) {
         return alert('Vui lòng nhập đầy đủ Tên đăng nhập và Mật khẩu!');
       }
+
+      // Tải dữ liệu tài khoản mới nhất từ Cloud trước khi kiểm tra đăng nhập
+      await pullFromCloud(false);
 
       const user = state.users.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
       if (!user) {
@@ -943,7 +1078,7 @@
       applyRolePermissions();
     }
 
-    function handleRegister() {
+    async function handleRegister() {
       const fullName = document.getElementById('reg-fullname').value.trim();
       const username = document.getElementById('reg-username').value.trim().replace(/\s+/g, '');
       const password = document.getElementById('reg-password').value;
@@ -954,11 +1089,12 @@
         return alert('Vui lòng điền đầy đủ Họ tên, Tên đăng nhập và Mật khẩu!');
       }
 
+      await pullFromCloud(false);
+
       if (state.users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
         return alert('Tên đăng nhập này đã tồn tại! Vui lòng chọn tên đăng nhập khác.');
       }
 
-      // Tự động tạo hồ sơ nhân sự tương ứng cho nhân viên đăng ký mới
       const nextNum = state.employees.length + 1;
       const empId = 'NV' + (nextNum < 10 ? '0' + nextNum : nextNum) + '_' + Date.now().toString().slice(-2);
 
@@ -973,15 +1109,15 @@
       const newUser = {
         username: username,
         password: password,
-        role: 'staff', // Mặc định là nhân viên, Admin có thể nâng quyền sau
+        role: 'staff',
         fullName: fullName,
         empId: empId
       };
 
       state.users.push(newUser);
-      saveState();
+      await saveState(true);
 
-      alert(`Đăng ký tài khoản "${username}" thành công! Hệ thống sẽ tự động đăng nhập cho bạn.`);
+      alert(`Đăng ký tài khoản "${username}" thành công! Dữ liệu đã được đồng bộ lên hệ thống.`);
       currentUser = newUser;
       sessionStorage.setItem(SESSION_KEY, JSON.stringify(newUser));
       applyRolePermissions();
@@ -1005,7 +1141,6 @@
         return;
       }
 
-      // Đồng bộ lại thông tin user mới nhất từ state
       const latestUser = state.users.find(u => u.username === currentUser.username);
       if (latestUser) currentUser = latestUser;
 
@@ -1015,13 +1150,15 @@
       document.getElementById('current-user-display').textContent = `${currentUser.fullName} (${currentUser.username})`;
       const roleBadge = document.getElementById('current-role-badge');
 
-      // Đặt bộ lọc tháng hiện tại mặc định
       const now = new Date();
       const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
       const staffMonthFilter = document.getElementById('staff-month-filter');
       if (staffMonthFilter && !staffMonthFilter.value) {
         staffMonthFilter.value = currentMonthStr;
       }
+
+      const tabCloudInput = document.getElementById('tab-cloud-url-input');
+      if (tabCloudInput) tabCloudInput.value = getActiveCloudUrl();
 
       const adminElements = document.querySelectorAll('.admin-only');
       const manualInInput = document.getElementById('att-manual-in');
@@ -1033,7 +1170,6 @@
         roleBadge.className = 'role-badge-admin';
         adminElements.forEach(el => el.classList.remove('hidden'));
 
-        // Admin có thể chỉnh sửa giờ thủ công và chọn bất kỳ nhân viên nào
         manualInInput.removeAttribute('readonly');
         manualOutInput.removeAttribute('readonly');
         empSelect.removeAttribute('disabled');
@@ -1047,7 +1183,6 @@
         roleBadge.className = 'role-badge-staff';
         adminElements.forEach(el => el.classList.add('hidden'));
 
-        // Nhân viên chỉ được chấm công bằng tải ảnh Gallery (Khóa nhập giờ tay & khóa đổi tên người khác)
         manualInInput.setAttribute('readonly', 'true');
         manualOutInput.setAttribute('readonly', 'true');
         document.getElementById('label-manual-in').textContent = 'Giờ Check-in (Chỉ đọc từ ảnh Gallery)';
@@ -1056,7 +1191,6 @@
         document.getElementById('table-export-btn').textContent = '📊 Tải Bảng Chấm công Cá nhân (.CSV)';
         document.getElementById('att-table-title').textContent = `Bảng Chấm công Cá nhân trong Tháng của ${currentUser.fullName}`;
 
-        // Đưa về Tab 1
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('tab-attendance').classList.add('active');
@@ -1067,7 +1201,7 @@
     }
 
     /* ==================== QUẢN LÝ TÀI KHOẢN & CẤP QUYỀN ADMIN ==================== */
-    function toggleAccountRole(username) {
+    async function toggleAccountRole(username) {
       if (!isAdmin()) return;
       if (username === 'admin1107') {
         return alert('Không thể hạ quyền của tài khoản Admin gốc (admin1107)!');
@@ -1076,12 +1210,12 @@
       if (!user) return;
 
       user.role = user.role === 'admin' ? 'staff' : 'admin';
-      saveState();
+      await saveState(true);
       renderAll();
       alert(`Đã cập nhật quyền của tài khoản "${username}" thành: ${user.role === 'admin' ? 'QUẢN TRỊ VIÊN (ADMIN)' : 'NHÂN VIÊN'}!`);
     }
 
-    function adminCreateAccount() {
+    async function adminCreateAccount() {
       if (!isAdmin()) return;
       const fullName = document.getElementById('acc-new-fullname').value.trim();
       const username = document.getElementById('acc-new-username').value.trim().replace(/\s+/g, '');
@@ -1118,32 +1252,23 @@
       document.getElementById('acc-new-fullname').value = '';
       document.getElementById('acc-new-username').value = '';
       document.getElementById('acc-new-password').value = '';
-      saveState();
+      await saveState(true);
       renderAll();
-      alert(`Đã tạo tài khoản "${username}" và hồ sơ nhân viên "${fullName}" thành công!`);
+      alert(`Đã tạo tài khoản "${username}" và đồng bộ lên Cloud!`);
     }
 
-    function deleteUserAccount(username) {
+    async function deleteUserAccount(username) {
       if (!isAdmin()) return;
       if (username === 'admin1107') {
         return alert('Không thể xóa tài khoản Admin gốc (admin1107)!');
       }
       if (!confirm(`Bạn có chắc chắn muốn xóa tài khoản "${username}"?`)) return;
       state.users = state.users.filter(u => u.username !== username);
-      saveState();
+      await saveState(true);
       renderAll();
     }
 
-    /* ==================== HÀM TIỆN ÍCH & ĐỌC ẢNH AI OCR ==================== */
-    function fileToDataURL(file) {
-      return new Promise((resolve) => {
-        if (!file) return resolve(null);
-        const reader = new FileReader();
-        reader.onload = e => resolve(e.target.result);
-        reader.readAsDataURL(file);
-      });
-    }
-
+    /* ==================== TIỆN ÍCH & ĐỌC ẢNH AI OCR ==================== */
     function formatDateTime(ms) {
       const d = new Date(ms);
       const pad = n => n < 10 ? '0' + n : n;
@@ -1319,8 +1444,8 @@
       document.getElementById(modalId).classList.remove('active');
     }
 
-    /* ==================== 1. QUẢN LÝ NHÂN VIÊN (CHỈ ADMIN) ==================== */
-    function addEmployee() {
+    /* ==================== 1. QUẢN LÝ NHÂN VIÊN ==================== */
+    async function addEmployee() {
       if (!isAdmin()) return;
       const name = document.getElementById('new-emp-name').value.trim();
       const rate = parseFloat(document.getElementById('new-emp-rate').value) || 25000;
@@ -1328,6 +1453,7 @@
       const account = document.getElementById('new-emp-acc').value.trim() || 'Chưa cập nhật';
       if (!name) return alert('Vui lòng nhập họ tên nhân viên!');
 
+      await pullFromCloud(false);
       const nextNum = state.employees.length + 1;
       const id = 'NV' + (nextNum < 10 ? '0' + nextNum : nextNum) + '_' + Date.now().toString().slice(-2);
       state.employees.push({ id, name, rate, bank, account });
@@ -1335,7 +1461,7 @@
       document.getElementById('new-emp-name').value = '';
       document.getElementById('new-emp-bank').value = '';
       document.getElementById('new-emp-acc').value = '';
-      saveState();
+      await saveState(true);
       renderAll();
     }
 
@@ -1357,7 +1483,7 @@
       document.getElementById('modal-edit-employee').classList.add('active');
     }
 
-    function saveEditedEmployee() {
+    async function saveEditedEmployee() {
       if (!isAdmin()) return;
       const id = document.getElementById('edit-emp-id').value;
       const name = document.getElementById('edit-emp-name').value.trim();
@@ -1373,7 +1499,6 @@
         emp.rate = rate;
         emp.bank = bank;
         emp.account = account;
-        // Đồng bộ tên hiển thị trên tài khoản liên kết nếu có
         const linkedUser = state.users.find(u => u.empId === id);
         if (linkedUser) linkedUser.fullName = name;
 
@@ -1383,12 +1508,12 @@
           });
         }
       }
-      saveState();
+      await saveState(true);
       closeModal('modal-edit-employee');
       renderAll();
     }
 
-    function deleteEmployee(empId) {
+    async function deleteEmployee(empId) {
       if (!isAdmin()) return;
       const emp = state.employees.find(e => e.id === empId);
       if (!emp) return;
@@ -1396,12 +1521,15 @@
       state.employees = state.employees.filter(e => e.id !== empId);
       state.attendance = state.attendance.filter(a => a.empId !== empId);
       state.evaluations = state.evaluations.filter(ev => ev.empId !== empId);
-      saveState();
+      await saveState(true);
       renderAll();
     }
 
-    /* ==================== 2. CHẤM CÔNG (KIỂM SOÁT QUYỀN NHÂN VIÊN & ADMIN) ==================== */
+    /* ==================== 2. CHẤM CÔNG & ĐỒNG BỘ LÊN CLOUD ==================== */
     async function recordAttendance() {
+      // Kéo bản mới nhất từ Cloud trước khi ghi thêm dòng mới để không ghi đè dữ liệu của người khác
+      await pullFromCloud(false);
+
       const empId = isAdmin() ? document.getElementById('att-emp-select').value : currentUser.empId;
       const emp = state.employees.find(e => e.id === empId);
       if (!emp) return alert('Không tìm thấy hồ sơ nhân viên hợp lệ!');
@@ -1411,7 +1539,6 @@
       const manualIn = document.getElementById('att-manual-in').value;
       const manualOut = document.getElementById('att-manual-out').value;
 
-      // Ràng buộc đối với Nhân viên: Bắt buộc phải tải đủ 2 ảnh từ Gallery
       if (!isAdmin() && (!inFile || !outFile)) {
         return alert('Tài khoản Nhân viên bắt buộc phải tải đủ 2 ảnh Check-in và Check-out từ Gallery để chấm công!');
       }
@@ -1426,7 +1553,6 @@
       const checkInTime = Math.min(t1, t2);
       const checkOutTime = Math.max(t1, t2);
 
-      // Ràng buộc đối với Nhân viên: Chỉ được chấm công của bản thân trong tháng hiện tại
       if (!isAdmin()) {
         const now = new Date();
         const inDate = new Date(checkInTime);
@@ -1445,8 +1571,8 @@
       const defaultInSvg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><rect width="50" height="50" fill="%231A73E8"/><text x="50%" y="55%" fill="white" font-size="10" text-anchor="middle">IN</text></svg>';
       const defaultOutSvg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><rect width="50" height="50" fill="%2312B5CB"/><text x="50%" y="55%" fill="white" font-size="10" text-anchor="middle">OUT</text></svg>';
 
-      const checkInThumb = (await fileToDataURL(inFile)) || defaultInSvg;
-      const checkOutThumb = (await fileToDataURL(outFile)) || defaultOutSvg;
+      const checkInThumb = (await compressImageToDataURL(inFile)) || defaultInSvg;
+      const checkOutThumb = (await compressImageToDataURL(outFile)) || defaultOutSvg;
 
       state.attendance.unshift({
         id: 'ATT_' + Date.now(),
@@ -1468,9 +1594,10 @@
       document.getElementById('att-manual-out').value = '';
       document.getElementById('att-note').value = '';
       updateLiveDurationPreview();
-      saveState();
+
+      await saveState(true);
       renderAll();
-      alert('Đã ghi nhận chấm công thành công!');
+      alert('Đã ghi nhận chấm công và đồng bộ lên hệ thống!');
     }
 
     function openEditAttendanceModal(attId) {
@@ -1521,25 +1648,26 @@
 
       const newInFile = document.getElementById('edit-att-in-file').files[0];
       const newOutFile = document.getElementById('edit-att-out-file').files[0];
-      if (newInFile) row.checkInThumb = await fileToDataURL(newInFile);
-      if (newOutFile) row.checkOutThumb = await fileToDataURL(newOutFile);
+      if (newInFile) row.checkInThumb = await compressImageToDataURL(newInFile);
+      if (newOutFile) row.checkOutThumb = await compressImageToDataURL(newOutFile);
 
-      saveState();
+      await saveState(true);
       closeModal('modal-edit-attendance');
       renderAll();
     }
 
-    function deleteAttendance(attId) {
+    async function deleteAttendance(attId) {
       if (!isAdmin()) return;
       if (!confirm('Bạn có chắc chắn muốn xóa dòng chấm công này?')) return;
       state.attendance = state.attendance.filter(a => a.id !== attId);
-      saveState();
+      await saveState(true);
       renderAll();
     }
 
-    /* ==================== 3. THI ĐUA THƯỞNG / PHẠT (CHỈ ADMIN) ==================== */
+    /* ==================== 3. THI ĐUA THƯỞNG / PHẠT ==================== */
     async function submitEndShiftReport() {
       if (!isAdmin()) return;
+      await pullFromCloud(false);
       const empId = document.getElementById('eval-emp-select').value;
       const file = document.getElementById('eval-room-photo').files[0];
       const progress = parseInt(document.getElementById('eval-progress').value) || 100;
@@ -1549,7 +1677,7 @@
 
       const photoTime = file ? file.lastModified : Date.now();
       const defaultRoomSvg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><rect width="50" height="50" fill="%2381C995"/><text x="50%" y="55%" fill="white" font-size="9" text-anchor="middle">ROOM</text></svg>';
-      const photoThumb = (await fileToDataURL(file)) || defaultRoomSvg;
+      const photoThumb = (await compressImageToDataURL(file)) || defaultRoomSvg;
 
       state.evaluations.unshift({
         id: 'EV_' + Date.now(),
@@ -1564,19 +1692,19 @@
       document.getElementById('eval-room-photo').value = '';
       document.getElementById('room-meta-preview').textContent = '';
       document.getElementById('eval-issues').value = '';
-      saveState();
+      await saveState(true);
       renderAll();
     }
 
-    function deleteEvaluation(evId) {
+    async function deleteEvaluation(evId) {
       if (!isAdmin()) return;
       if (!confirm('Xóa bản ghi thưởng/phạt này?')) return;
       state.evaluations = state.evaluations.filter(ev => ev.id !== evId);
-      saveState();
+      await saveState(true);
       renderAll();
     }
 
-    /* ==================== 4. XUẤT FILE SHEET (PHÂN QUYỀN ADMIN VS CÁ NHÂN) ==================== */
+    /* ==================== 4. XUẤT FILE SHEET ==================== */
     function handleExportSheetAction() {
       if (isAdmin()) {
         exportMonthlySheet();
@@ -1585,7 +1713,6 @@
       }
     }
 
-    // Nhân viên chỉ tải được bảng chấm công của chính bản thân trong tháng
     function exportPersonalMonthlySheet() {
       if (!currentUser || !currentUser.empId) {
         return alert('Tài khoản của bạn chưa gắn với mã nhân viên!');
@@ -1630,7 +1757,6 @@
       downloadCSV(csvRows, `Cham_Cong_Ca_Nhan_${emp.name.replace(/\s+/g, '_')}_${monthVal}.csv`);
     }
 
-    // Admin tải bảng tổng hợp toàn bộ hệ thống
     function exportMonthlySheet() {
       if (!isAdmin()) return exportPersonalMonthlySheet();
 
@@ -1753,12 +1879,12 @@
       URL.revokeObjectURL(url);
     }
 
-    /* ==================== BACKUP GOOGLE DRIVE (CHỈ ADMIN) ==================== */
+    /* ==================== CẤU HÌNH CLOUD & BACKUP ==================== */
     function exportBackupJSON() {
       if (!isAdmin()) return;
       const backupPayload = {
         exportedAt: new Date().toISOString(),
-        system: 'iPOS HRM Cloud Pro RBAC',
+        system: 'iPOS HRM Cloud Sync V5',
         data: state
       };
       const blob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: 'application/json' });
@@ -1776,7 +1902,7 @@
       const file = input.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = e => {
+      reader.onload = async e => {
         try {
           const parsed = JSON.parse(e.target.result);
           const restoredState = parsed.data || parsed;
@@ -1784,9 +1910,10 @@
             return alert('File JSON không đúng định dạng Backup của iPOS HRM!');
           }
           state = restoredState;
-          saveState();
+          ensureRootAdmin(state);
+          await saveState(true);
           renderAll();
-          alert('Đã khôi phục dữ liệu thành công!');
+          alert('Đã khôi phục dữ liệu và đồng bộ lên Cloud thành công!');
         } catch (err) {
           alert('Lỗi đọc file Backup: ' + err.message);
         }
@@ -1796,48 +1923,37 @@
 
     function openDriveModal() {
       if (!isAdmin()) return;
-      document.getElementById('drive-webhook-url').value = state.driveWebhookUrl || '';
+      document.getElementById('drive-webhook-url').value = getActiveCloudUrl();
       document.getElementById('modal-drive-backup').classList.add('active');
+    }
+
+    async function saveCloudUrlFromTab() {
+      if (!isAdmin()) return;
+      const url = document.getElementById('tab-cloud-url-input').value.trim();
+      state.driveWebhookUrl = url;
+      await saveState(true);
+      alert('Đã lưu đường dẫn Cloud Sync và đồng bộ dữ liệu!');
     }
 
     async function uploadBackupToGoogleDrive() {
       if (!isAdmin()) return;
       const webhookUrl = document.getElementById('drive-webhook-url').value.trim();
       state.driveWebhookUrl = webhookUrl;
-      saveState();
+      const tabInput = document.getElementById('tab-cloud-url-input');
+      if (tabInput) tabInput.value = webhookUrl;
 
-      if (!webhookUrl) {
-        exportBackupJSON();
-        alert('Đã tải file Backup (.json) về máy!');
-        return;
-      }
-
-      try {
-        await fetch(webhookUrl, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            exportedAt: new Date().toISOString(),
-            system: 'iPOS HRM Cloud Pro RBAC',
-            data: state
-          })
-        });
-        alert('Đã gửi bản sao lưu lên Google Drive thành công!');
-        closeModal('modal-drive-backup');
-      } catch (err) {
-        exportBackupJSON();
-      }
+      await saveState(true);
+      closeModal('modal-drive-backup');
+      alert('Đã lưu cấu hình Cloud và đẩy toàn bộ dữ liệu lên Google Drive!');
     }
 
-    /* ==================== RENDER GIAO DIỆN THEO QUYỀN ==================== */
+    /* ==================== RENDER GIAO DIỆN ==================== */
     function renderAll() {
       if (!currentUser) return;
 
       const monthVal = document.getElementById('staff-month-filter')?.value || '';
       const [yearFilter, monthFilter] = monthVal ? monthVal.split('-').map(Number) : [null, null];
 
-      // 1. Cập nhật Select chọn nhân viên (Nếu là Nhân viên thì chỉ hiện đúng tên mình và khóa lại)
       const attSelect = document.getElementById('att-emp-select');
       if (isAdmin()) {
         const currentVal = attSelect.value;
@@ -1857,7 +1973,6 @@
         evalSelect.innerHTML = state.employees.map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('');
       }
 
-      // 2. Lọc danh sách chấm công hiển thị theo quyền (Admin thấy tất cả, Nhân viên chỉ thấy của bản thân trong tháng)
       const visibleAttendance = state.attendance.filter(row => {
         const matchMonth = !yearFilter || (new Date(row.checkInTime).getFullYear() === yearFilter && (new Date(row.checkInTime).getMonth() + 1) === monthFilter);
         if (isAdmin()) return matchMonth;
@@ -1907,7 +2022,6 @@
         `;
       }).join('');
 
-      // 3. Cập nhật KPI và các bảng dành riêng cho Admin
       if (isAdmin()) {
         let systemTotalHours = 0;
         let systemTotalPayroll = 0;
@@ -1956,7 +2070,6 @@
         document.getElementById('kpi-label-4').textContent = 'Tổng Lượt Chấm công';
         document.getElementById('kpi-total-records').textContent = `${state.attendance.length} Lượt`;
 
-        // Render Bảng Thi đua
         const evalBody = document.getElementById('eval-table-body');
         evalBody.innerHTML = state.evaluations.map(ev => {
           const emp = state.employees.find(e => e.id === ev.empId) || { name: 'Không xác định' };
@@ -1982,7 +2095,6 @@
           `;
         }).join('');
 
-        // Render Bảng Quản lý Tài khoản & Cấp quyền Admin
         const accBody = document.getElementById('accounts-table-body');
         accBody.innerHTML = state.users.map(u => {
           const isRoot = u.username === 'admin1107';
@@ -2014,7 +2126,6 @@
         }).join('');
 
       } else {
-        // KPI dành riêng cho Nhân viên đang đăng nhập (Chỉ thấy số liệu của bản thân trong tháng)
         const myHours = visibleAttendance.reduce((s, a) => s + a.hours, 0);
         const myPay = visibleAttendance.reduce((s, a) => s + (a.hours * a.rate), 0);
 
@@ -2029,7 +2140,8 @@
       }
     }
 
-    window.onload = () => {
+    window.onload = async () => {
+      await pullFromCloud(false);
       try {
         const savedSession = sessionStorage.getItem(SESSION_KEY);
         if (savedSession) {
@@ -2037,6 +2149,13 @@
         }
       } catch (e) {}
       applyRolePermissions();
+
+      // Tự động làm mới dữ liệu ngầm mỗi 25 giây nếu có kết nối Cloud
+      setInterval(() => {
+        if (currentUser && getActiveCloudUrl()) {
+          pullFromCloud(false);
+        }
+      }, 25000);
     };
   </script>
 </body>
