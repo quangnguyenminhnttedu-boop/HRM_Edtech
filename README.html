@@ -334,7 +334,7 @@
   <div class="sync-bar">
     <div class="sync-indicator">
       <span class="sync-dot" id="sync-dot"></span>
-      <span id="sync-status-text">Đang kiểm tra kết nối đồng bộ đám mây...</span>
+      <span id="sync-status-text">Đang kết nối máy chủ Google Drive Cloud...</span>
     </div>
     <div style="display:flex; gap:10px; align-items:center;">
       <button class="btn btn-outline" style="padding:3px 10px; font-size:11px;" onclick="pullFromCloud(true)">🔄 Tải dữ liệu mới nhất</button>
@@ -681,7 +681,7 @@
         <div class="card">
           <div class="card-title">1. Cấu hình Đồng bộ Đám mây Thời gian thực (Google Drive Cloud Sync)</div>
           <p style="font-size:13px; color:var(--text-secondary); margin-bottom:14px;">
-            Dán đường dẫn <strong>Google Apps Script Web App URL</strong> vào ô bên dưới (hoặc gắn cố định vào biến <code>CLOUD_SYNC_URL</code> trong code trước khi up lên GitHub) để mọi thao tác chấm công của nhân viên tự động đồng bộ về máy bạn.
+            Hệ thống đã được gắn sẵn đường dẫn <strong>Google Apps Script Web App URL</strong> của bạn để tự động đồng bộ mọi thao tác chấm công của nhân viên về Google Drive.
           </p>
           <div class="form-grid">
             <div class="form-group" style="grid-column: span 2;">
@@ -815,7 +815,7 @@
         <button class="modal-close" onclick="closeModal('modal-drive-backup')">&times;</button>
       </div>
       <div style="font-size:13px; line-height:1.6; color:var(--text-secondary); margin-bottom:14px;">
-        Khi gắn link Google Apps Script Web App vào đây (hoặc gắn vào biến <code>CLOUD_SYNC_URL</code> trong code trước khi đẩy lên GitHub), mọi lượt chấm công của nhân viên sẽ tự động gửi thẳng về Google Drive của bạn.
+        Đường dẫn Google Apps Script Web App bên dưới đang được dùng để đồng bộ dữ liệu thời gian thực giữa tất cả nhân viên và Admin.
       </div>
       <div class="form-group" style="margin-bottom:14px;">
         <label>Google Apps Script Web App URL</label>
@@ -830,10 +830,9 @@
 
   <script>
     // =========================================================================
-    // DÁN LINK GOOGLE APPS SCRIPT WEB APP CỦA BẠN VÀO GIỮA CẶP NHÁY ĐƠN BÊN DƯỚI
-    // ĐỂ TẤT CẢ NHÂN VIÊN TRUY CẬP GITHUB PAGES ĐỀU TỰ ĐỘNG ĐỒNG BỘ VỀ DRIVE CỦA BẠN:
+    // ĐÃ GẮN SẴN LINK GOOGLE APPS SCRIPT WEB APP CỦA BẠN:
     // =========================================================================
-    const CLOUD_SYNC_URL = ''; 
+    const CLOUD_SYNC_URL = 'https://script.google.com/macros/s/AKfycbxURxh5Afu5EA_oeHncSWP8Ofw9MyNIvPOt0q-iudl71Ijr2xMHPHFPAmE5fszjtahE2A/exec';
 
     const STORAGE_KEY = 'IPOS_HRM_RBAC_V5';
     const SESSION_KEY = 'IPOS_HRM_CURRENT_USER_V5';
@@ -907,9 +906,7 @@
         rootAdmin.password = '11072007edtech';
         rootAdmin.role = 'admin';
       }
-      if (CLOUD_SYNC_URL && !targetState.driveWebhookUrl) {
-        targetState.driveWebhookUrl = CLOUD_SYNC_URL;
-      }
+      targetState.driveWebhookUrl = CLOUD_SYNC_URL;
     }
 
     function loadState() {
@@ -928,7 +925,6 @@
       return copy;
     }
 
-    // Lưu cục bộ và tự động đẩy bản cập nhật lên Google Drive Cloud
     async function saveState(pushToCloudServer = true) {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -940,7 +936,6 @@
       }
     }
 
-    // Tải dữ liệu mới nhất từ Cloud về máy
     async function pullFromCloud(showAlert = false) {
       const url = getActiveCloudUrl();
       if (!url) {
@@ -949,16 +944,14 @@
       }
       if (isSyncing) return false;
       isSyncing = true;
-      updateSyncBanner('syncing', 'Đang tải dữ liệu đồng bộ từ Cloud...');
+      updateSyncBanner('syncing', 'Đang tải dữ liệu đồng bộ từ Google Drive Cloud...');
 
       try {
         const res = await fetch(url + '?t=' + Date.now(), { method: 'GET', redirect: 'follow' });
         const json = await res.json();
         const remoteData = json.data || json;
         if (remoteData && Array.isArray(remoteData.employees) && Array.isArray(remoteData.attendance)) {
-          const keepUrl = state.driveWebhookUrl || url;
           state = remoteData;
-          state.driveWebhookUrl = keepUrl;
           ensureRootAdmin(state);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
           renderAll();
@@ -967,7 +960,6 @@
           isSyncing = false;
           return true;
         } else {
-          // Nếu file trên Cloud vừa mới khởi tạo (chưa có dữ liệu), đẩy dữ liệu hiện tại lên
           isSyncing = false;
           await pushToCloud();
           return true;
@@ -980,14 +972,13 @@
       }
     }
 
-    // Đẩy dữ liệu từ máy nhân viên / Admin lên Cloud
     async function pushToCloud() {
       const url = getActiveCloudUrl();
       if (!url) {
         updateSyncBanner('offline', 'Chế độ Offline (Chưa gắn link Google Apps Script Cloud Sync)');
         return false;
       }
-      updateSyncBanner('syncing', 'Đang đồng bộ dữ liệu lên Cloud...');
+      updateSyncBanner('syncing', 'Đang đồng bộ dữ liệu lên Google Drive Cloud...');
       try {
         await fetch(url, {
           method: 'POST',
@@ -1008,7 +999,6 @@
       }
     }
 
-    // Thuật toán nén ảnh Thumbnail siêu nhẹ (~15KB) để đồng bộ Cloud cực nhanh
     function compressImageToDataURL(file, maxSize = 160, quality = 0.7) {
       return new Promise((resolve) => {
         if (!file) return resolve(null);
@@ -1064,7 +1054,6 @@
         return alert('Vui lòng nhập đầy đủ Tên đăng nhập và Mật khẩu!');
       }
 
-      // Tải dữ liệu tài khoản mới nhất từ Cloud trước khi kiểm tra đăng nhập
       await pullFromCloud(false);
 
       const user = state.users.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
@@ -1527,7 +1516,6 @@
 
     /* ==================== 2. CHẤM CÔNG & ĐỒNG BỘ LÊN CLOUD ==================== */
     async function recordAttendance() {
-      // Kéo bản mới nhất từ Cloud trước khi ghi thêm dòng mới để không ghi đè dữ liệu của người khác
       await pullFromCloud(false);
 
       const empId = isAdmin() ? document.getElementById('att-emp-select').value : currentUser.empId;
@@ -2150,7 +2138,7 @@
       } catch (e) {}
       applyRolePermissions();
 
-      // Tự động làm mới dữ liệu ngầm mỗi 25 giây nếu có kết nối Cloud
+      // Tự động đồng bộ ngầm mỗi 25 giây
       setInterval(() => {
         if (currentUser && getActiveCloudUrl()) {
           pullFromCloud(false);
