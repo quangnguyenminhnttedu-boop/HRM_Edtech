@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>iPOS HRM Pro - Hệ thống Chấm công AI OCR & Quản trị Nhân sự</title>
+  <title>iPOS HRM Pro - Hệ thống Chấm công AI OCR & Phân quyền Nhân sự</title>
   <!-- Thư viện AI OCR Tesseract.js để đọc chữ ngày giờ bên trong ảnh chụp màn hình -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <!-- Thư viện EXIF-JS để đọc Metadata gốc của ảnh chụp camera -->
@@ -24,11 +24,75 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; }
     body { background-color: var(--bg-main); color: var(--text-primary); padding-bottom: 50px; }
-    
+    .hidden { display: none !important; }
+
+    /* ==================== MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ ==================== */
+    .auth-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: linear-gradient(135deg, #0F2942 0%, #1A73E8 100%);
+    }
+    .auth-card {
+      background: var(--bg-card);
+      width: 100%;
+      max-width: 460px;
+      border-radius: 14px;
+      padding: 30px 28px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+    }
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .auth-logo h1 {
+      font-size: 22px;
+      color: var(--tech-blue-dark);
+      letter-spacing: 0.5px;
+    }
+    .auth-logo p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background: #F1F5F9;
+      padding: 5px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .auth-tab-btn {
+      padding: 9px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      background: transparent;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+    .auth-tab-btn.active {
+      background: #FFFFFF;
+      color: var(--tech-blue);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    }
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* ==================== HEADER & GIAO DIỆN CHÍNH ==================== */
     .app-header {
       background: linear-gradient(135deg, var(--tech-blue-dark), var(--tech-blue));
       color: #FFFFFF;
-      padding: 18px 24px;
+      padding: 16px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -36,16 +100,19 @@
       gap: 12px;
       box-shadow: 0 2px 10px rgba(26, 115, 232, 0.2);
     }
-    .brand-title { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; display: flex; align-items: center; gap: 10px; }
-    .brand-badge { background: var(--tech-cyan); font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 600; }
+    .brand-title { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .brand-badge { background: var(--tech-cyan); font-size: 11px; padding: 3px 9px; border-radius: 12px; font-weight: 600; }
+    .role-badge-admin { background: #EA4335; color: #FFF; font-size: 11px; padding: 4px 10px; border-radius: 12px; font-weight: 700; }
+    .role-badge-staff { background: #34A853; color: #FFF; font-size: 11px; padding: 4px 10px; border-radius: 12px; font-weight: 700; }
     .header-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .user-welcome { font-size: 13px; font-weight: 600; margin-right: 6px; display: flex; align-items: center; gap: 6px; }
 
     .kpi-container {
-      max-width: 1240px;
+      max-width: 1260px;
       margin: 20px auto 15px;
       padding: 0 16px;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
       gap: 16px;
     }
     .kpi-card {
@@ -62,7 +129,7 @@
     .kpi-value { font-size: 22px; font-weight: 700; margin-top: 6px; color: var(--text-primary); }
 
     .nav-tabs {
-      max-width: 1240px;
+      max-width: 1260px;
       margin: 0 auto 20px;
       padding: 0 16px;
       display: flex;
@@ -73,9 +140,9 @@
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       color: var(--text-secondary);
-      padding: 10px 18px;
+      padding: 10px 16px;
       border-radius: 8px;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
@@ -87,7 +154,7 @@
       box-shadow: 0 2px 6px rgba(26, 115, 232, 0.25);
     }
 
-    .main-container { max-width: 1240px; margin: 0 auto; padding: 0 16px; }
+    .main-container { max-width: 1260px; margin: 0 auto; padding: 0 16px; }
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
     .card {
@@ -126,6 +193,12 @@
       border-radius: 6px;
       font-size: 13px;
       outline: none;
+      background: #FFFFFF;
+    }
+    .form-group input[readonly], .form-group select:disabled {
+      background: #F1F5F9;
+      color: #475569;
+      cursor: not-allowed;
     }
     .form-group input:focus, .form-group select:focus { border-color: var(--tech-blue); }
     
@@ -201,7 +274,7 @@
     }
     td { padding: 12px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
     .thumb-box { display: flex; align-items: center; gap: 10px; }
-    .thumb-img { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border-color); flex-shrink: 0; cursor: zoom-in; }
+    .thumb-img { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border-color); flex-shrink: 0; }
     .timestamp-tag {
       display: inline-block;
       background: #E8F0FE;
@@ -215,6 +288,8 @@
     .badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-block; margin: 2px; }
     .badge-reward { background: #E6F4EA; color: #137333; }
     .badge-penalty { background: #FCE8E6; color: #C5221F; }
+    .badge-admin { background: #FCE8E6; color: #C5221F; }
+    .badge-staff { background: #E8F0FE; color: #174EA6; }
 
     .modal-overlay {
       position: fixed;
@@ -259,265 +334,387 @@
 </head>
 <body>
 
-  <header class="app-header">
-    <div class="brand-title">
-      <span>iPOS HRM CLOUD</span>
-      <span class="brand-badge">AI OCR EDITION</span>
-    </div>
-    <div class="header-actions">
-      <button class="btn btn-outline" onclick="exportBackupJSON()">⬇ Tải File Backup (.JSON)</button>
-      <button class="btn btn-outline" onclick="openDriveModal()">☁ Lưu trữ Google Drive</button>
-      <button class="btn btn-success" style="padding:8px 14px; font-size:12px;" onclick="exportMonthlySheet()">📊 Xuất Sheet Tổng hợp Cuối tháng (.CSV/Excel)</button>
-    </div>
-  </header>
-
-  <section class="kpi-container">
-    <div class="kpi-card">
-      <div class="kpi-label">Tổng Nhân sự Hệ thống</div>
-      <div class="kpi-value" id="kpi-staff-count">0 Nhân viên</div>
-    </div>
-    <div class="kpi-card cyan">
-      <div class="kpi-label">Tổng Giờ công Đã Xác thực</div>
-      <div class="kpi-value" id="kpi-total-hours">0.00 Giờ</div>
-    </div>
-    <div class="kpi-card mint">
-      <div class="kpi-label">Quỹ Lương & Thưởng Tạm tính</div>
-      <div class="kpi-value" id="kpi-total-payroll">0 VNĐ</div>
-    </div>
-    <div class="kpi-card orange">
-      <div class="kpi-label">Tổng Lượt Chấm công</div>
-      <div class="kpi-value" id="kpi-total-records">0 Lượt</div>
-    </div>
-  </section>
-
-  <nav class="nav-tabs">
-    <button class="tab-btn active" onclick="switchTab('tab-attendance', this)">1. Chấm công AI Đọc Ảnh & Bảng Chấm công</button>
-    <button class="tab-btn" onclick="switchTab('tab-employees', this)">2. Quản lý Nhân sự, Ngân hàng & Thu nhập</button>
-    <button class="tab-btn" onclick="switchTab('tab-gamification', this)">3. Thi đua Thưởng/Phạt & Báo cáo Cuối ngày</button>
-    <button class="tab-btn" onclick="switchTab('tab-backup', this)">4. Sao lưu Google Drive & Xuất Sheet Cuối tháng</button>
-  </nav>
-
-  <main class="main-container">
-    <!-- TAB 1 -->
-    <section id="tab-attendance" class="tab-panel active">
-      <div class="card">
-        <div class="card-title">
-          <span>Thêm Nhanh Hồ sơ Nhân viên Mới</span>
-          <span style="font-size:12px; color:var(--text-secondary); font-weight:400;">Đồng bộ tự động với Bảng chấm công & Sổ lương</span>
-        </div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Họ và Tên Nhân viên</label>
-            <input type="text" id="new-emp-name" placeholder="VD: Vũ Vinh Sơn">
-          </div>
-          <div class="form-group">
-            <label>Lương cố định / giờ (VNĐ)</label>
-            <input type="number" id="new-emp-rate" placeholder="VD: 25000" value="25000">
-          </div>
-          <div class="form-group">
-            <label>Ngân hàng thụ hưởng</label>
-            <input type="text" id="new-emp-bank" placeholder="VD: Techcombank">
-          </div>
-          <div class="form-group">
-            <label>Số Tài khoản Ngân hàng</label>
-            <input type="text" id="new-emp-acc" placeholder="VD: 190388492010">
-          </div>
-          <button class="btn" onclick="addEmployee()">+ Lưu Nhân viên</button>
-        </div>
+  <!-- ==================== MÀN HÌNH ĐĂNG NHẬP & ĐĂNG KÝ ==================== -->
+  <div id="auth-screen" class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <h1>iPOS HRM CLOUD</h1>
+        <p>Hệ thống Chấm công AI OCR & Quản trị Nhân sự</p>
       </div>
 
-      <!-- Khu vực tải ảnh có AI OCR đọc chữ thời gian trong ảnh -->
-      <div class="card">
-        <div class="card-title">
-          <span>Thêm Lượt Chấm công Mới (AI Tự động Đọc Giờ Chụp Bên Trong Ảnh hoặc EXIF)</span>
-          <span style="font-size:12px; color:var(--tech-mint); font-weight:600;">✓ Hỗ trợ đọc chữ thời gian trong ảnh chụp màn hình iPhone/Android</span>
-        </div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Chọn Nhân viên</label>
-            <select id="att-emp-select"></select>
-          </div>
-          <div class="form-group">
-            <label>Ảnh Check-in (Tải ảnh lên để AI đọc giờ)</label>
-            <input type="file" id="att-checkin-file" accept="image/*" onchange="analyzeUploadedImage(this, 'checkin-meta-preview', 'att-manual-in')">
-            <div id="checkin-meta-preview" class="ocr-status">Chưa chọn ảnh</div>
-          </div>
-          <div class="form-group">
-            <label>Giờ Check-in (Tự điền từ ảnh / Có thể sửa)</label>
-            <input type="datetime-local" id="att-manual-in" onchange="updateLiveDurationPreview()">
-          </div>
-          <div class="form-group">
-            <label>Ảnh Check-out (Tải ảnh lên để AI đọc giờ)</label>
-            <input type="file" id="att-checkout-file" accept="image/*" onchange="analyzeUploadedImage(this, 'checkout-meta-preview', 'att-manual-out')">
-            <div id="checkout-meta-preview" class="ocr-status">Chưa chọn ảnh</div>
-          </div>
-          <div class="form-group">
-            <label>Giờ Check-out (Tự điền từ ảnh / Có thể sửa)</label>
-            <input type="datetime-local" id="att-manual-out" onchange="updateLiveDurationPreview()">
-          </div>
-          <div class="form-group">
-            <label>Ghi chú Chấm công</label>
-            <input type="text" id="att-note" placeholder="VD: Đúng giờ, đủ đồng phục">
-          </div>
-          <button class="btn btn-secondary" id="btn-record-att" onclick="recordAttendance()">+ Thêm vào Bảng Chấm công</button>
-        </div>
-
-        <!-- Thanh hiển thị kết quả tính giờ trực tiếp từ 2 ảnh -->
-        <div class="live-calc-banner" id="live-calc-banner">
-          <span>⏱ <strong>Kết quả tính giờ từ ảnh:</strong> <span id="live-calc-text">Hãy tải lên ảnh Check-in và Check-out để hệ thống đọc thời gian...</span></span>
-          <span id="live-calc-hours" style="font-weight:700; color:var(--tech-blue-dark); font-size:15px;">0.00 giờ</span>
-        </div>
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" id="tab-btn-login" onclick="switchAuthTab('login')">Đăng nhập</button>
+        <button class="auth-tab-btn" id="tab-btn-register" onclick="switchAuthTab('register')">Đăng ký Nhân viên</button>
       </div>
 
-      <div class="card">
-        <div class="card-title">
-          <span>Bảng Thống kê Chấm công Chi tiết (Cho phép Sửa, Cập nhật & Xóa)</span>
-          <button class="btn btn-success btn-sm" onclick="exportMonthlySheet()">📊 Xuất Sheet Tổng hợp (.CSV)</button>
+      <!-- FORM ĐĂNG NHẬP -->
+      <div id="form-login" class="auth-form">
+        <div class="form-group">
+          <label>Tên đăng nhập (Username)</label>
+          <input type="text" id="login-username" placeholder="Nhập tên đăng nhập..." onkeydown="if(event.key==='Enter') handleLogin()">
         </div>
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr>
-                <th>1. Tên nhân viên</th>
-                <th>2. Check in (Ảnh & Thời gian trong ảnh)</th>
-                <th>3. Check out (Ảnh & Thời gian trong ảnh)</th>
-                <th>4. Tổng giờ làm</th>
-                <th>5. Lương cố định/h</th>
-                <th>6. Thành tiền</th>
-                <th>7. Ghi chú</th>
-                <th>Thao tác (Sửa/Xóa)</th>
-              </tr>
-            </thead>
-            <tbody id="attendance-table-body"></tbody>
-          </table>
+        <div class="form-group">
+          <label>Mật khẩu (Password)</label>
+          <input type="password" id="login-password" placeholder="Nhập mật khẩu..." onkeydown="if(event.key==='Enter') handleLogin()">
         </div>
+        <button class="btn" style="width:100%; padding:12px; margin-top:4px;" onclick="handleLogin()">Đăng nhập Hệ thống</button>
+      </div>
+
+      <!-- FORM ĐĂNG KÝ TÀI KHOẢN NHÂN VIÊN MỚI -->
+      <div id="form-register" class="auth-form hidden">
+        <div class="form-group">
+          <label>Họ và Tên Nhân viên (Ghi danh)</label>
+          <input type="text" id="reg-fullname" placeholder="VD: Nguyễn Văn A">
+        </div>
+        <div class="form-group">
+          <label>Tên đăng nhập (Viết liền, không dấu)</label>
+          <input type="text" id="reg-username" placeholder="VD: nguyenvana">
+        </div>
+        <div class="form-group">
+          <label>Mật khẩu</label>
+          <input type="password" id="reg-password" placeholder="Tối thiểu 6 ký tự">
+        </div>
+        <div class="form-group">
+          <label>Ngân hàng nhận lương (Tùy chọn)</label>
+          <input type="text" id="reg-bank" placeholder="VD: Techcombank, MB Bank...">
+        </div>
+        <div class="form-group">
+          <label>Số tài khoản ngân hàng (Tùy chọn)</label>
+          <input type="text" id="reg-acc" placeholder="VD: 190388492010">
+        </div>
+        <button class="btn btn-success" style="width:100%; padding:12px; margin-top:4px;" onclick="handleRegister()">Hoàn tất Đăng ký & Ghi danh</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== GIAO DIỆN ỨNG DỤNG CHÍNH ==================== -->
+  <div id="app-screen" class="hidden">
+    <header class="app-header">
+      <div class="brand-title">
+        <span>iPOS HRM CLOUD</span>
+        <span class="brand-badge">AI OCR & RBAC</span>
+        <span id="current-role-badge" class="role-badge-admin">ADMIN</span>
+      </div>
+      <div class="header-actions">
+        <div class="user-welcome">
+          <span>👤 Xin chào, <strong id="current-user-display">Admin</strong></span>
+        </div>
+        <button class="btn btn-outline admin-only" onclick="exportBackupJSON()">⬇ Backup (.JSON)</button>
+        <button class="btn btn-outline admin-only" onclick="openDriveModal()">☁ Lưu Google Drive</button>
+        <button class="btn btn-success" id="header-export-btn" style="padding:8px 14px; font-size:12px;" onclick="handleExportSheetAction()">📊 Xuất Sheet Tổng hợp Cuối tháng</button>
+        <button class="btn btn-danger" style="padding:8px 12px; font-size:12px;" onclick="handleLogout()">Đăng xuất</button>
+      </div>
+    </header>
+
+    <!-- Thanh KPI tự động thích ứng theo quyền Admin / Nhân viên -->
+    <section class="kpi-container">
+      <div class="kpi-card">
+        <div class="kpi-label" id="kpi-label-1">Tổng Nhân sự Hệ thống</div>
+        <div class="kpi-value" id="kpi-staff-count">0 Nhân viên</div>
+      </div>
+      <div class="kpi-card cyan">
+        <div class="kpi-label" id="kpi-label-2">Tổng Giờ công Đã Xác thực</div>
+        <div class="kpi-value" id="kpi-total-hours">0.00 Giờ</div>
+      </div>
+      <div class="kpi-card mint">
+        <div class="kpi-label" id="kpi-label-3">Quỹ Lương & Thưởng Tạm tính</div>
+        <div class="kpi-value" id="kpi-total-payroll">0 VNĐ</div>
+      </div>
+      <div class="kpi-card orange">
+        <div class="kpi-label" id="kpi-label-4">Tổng Lượt Chấm công</div>
+        <div class="kpi-value" id="kpi-total-records">0 Lượt</div>
       </div>
     </section>
 
-    <!-- TAB 2 -->
-    <section id="tab-employees" class="tab-panel">
-      <div class="card">
-        <div class="card-title">
-          <span>Danh sách Nhân viên, Tài khoản Ngân hàng & Tổng Thu nhập (Có quyền Chỉnh sửa / Xóa)</span>
-          <button class="btn btn-sm" onclick="openAddEmployeeModal()">+ Thêm Nhân viên Mới</button>
-        </div>
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr>
-                <th>Mã & Họ tên Nhân viên</th>
-                <th>Tài khoản Ngân hàng</th>
-                <th>Lương cố định/h & Giờ tích lũy</th>
-                <th>Lương Cơ bản</th>
-                <th>Thưởng / Phạt Thi đua</th>
-                <th>Tổng thu nhập (Thực lĩnh)</th>
-                <th>Thao tác (Chỉnh sửa / Xóa)</th>
-              </tr>
-            </thead>
-            <tbody id="employee-table-body"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+    <!-- Thanh Điều hướng Phân hệ (Ẩn các tab quản trị đối với Nhân viên) -->
+    <nav class="nav-tabs" id="main-nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('tab-attendance', this)">1. Chấm công Ảnh Gallery & Bảng Chấm công</button>
+      <button class="tab-btn admin-only" onclick="switchTab('tab-employees', this)">2. Quản lý Nhân sự, Ngân hàng & Thu nhập</button>
+      <button class="tab-btn admin-only" onclick="switchTab('tab-gamification', this)">3. Thi đua Thưởng/Phạt & Báo cáo Cuối ngày</button>
+      <button class="tab-btn admin-only" onclick="switchTab('tab-accounts', this)">4. Quản lý Tài khoản & Cấp quyền Admin</button>
+      <button class="tab-btn admin-only" onclick="switchTab('tab-backup', this)">5. Sao lưu Google Drive & Xuất Sheet</button>
+    </nav>
 
-    <!-- TAB 3 -->
-    <section id="tab-gamification" class="tab-panel">
-      <div class="card">
-        <div class="card-title">Báo cáo Hình ảnh Toàn phòng Cuối giờ làm & Chấm điểm Thi đua Khen thưởng / Phạt</div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Nhân viên Báo cáo Cuối ca</label>
-            <select id="eval-emp-select"></select>
+    <main class="main-container">
+      <!-- TAB 1: CHẤM CÔNG (HIỂN THỊ CHO CẢ ADMIN VÀ NHÂN VIÊN VỚI QUYỀN KHÁC NHAU) -->
+      <section id="tab-attendance" class="tab-panel active">
+        <!-- Thêm nhanh nhân viên: Chỉ Admin mới thấy -->
+        <div class="card admin-only" id="admin-quick-add-emp">
+          <div class="card-title">
+            <span>Thêm Nhanh Hồ sơ Nhân viên Mới (Quyền Admin)</span>
+            <span style="font-size:12px; color:var(--text-secondary); font-weight:400;">Đồng bộ tự động với Bảng chấm công & Sổ lương</span>
           </div>
-          <div class="form-group">
-            <label>Ảnh chụp Toàn phòng Cuối giờ (Gallery)</label>
-            <input type="file" id="eval-room-photo" accept="image/*" onchange="analyzeUploadedImage(this, 'room-meta-preview', null)">
-            <small id="room-meta-preview" class="ocr-status"></small>
-          </div>
-          <div class="form-group">
-            <label>Tiến độ Công việc trong ngày (%)</label>
-            <input type="number" id="eval-progress" value="100" min="0" max="100">
-          </div>
-          <div class="form-group">
-            <label>Vấn đề phát sinh trong ngày</label>
-            <input type="text" id="eval-issues" placeholder="VD: Phòng sạch sẽ, đã tắt thiết bị">
-          </div>
-          <div class="form-group">
-            <label>Loại Thi đua</label>
-            <select id="eval-type">
-              <option value="reward">Khen thưởng (+ VNĐ)</option>
-              <option value="penalty">Xử phạt (- VNĐ)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Số tiền Thưởng / Phạt (VNĐ)</label>
-            <input type="number" id="eval-amount" value="50000" step="10000">
-          </div>
-          <button class="btn" onclick="submitEndShiftReport()">Lưu Báo cáo & Cập nhật Lương</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Nhật ký Ảnh Toàn phòng Cuối ca, Tiến độ & Quyết định Thưởng / Phạt</div>
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr>
-                <th>Nhân viên</th>
-                <th>Ảnh Toàn phòng & Giờ chụp</th>
-                <th>Tiến độ Công việc</th>
-                <th>Các vấn đề trong ngày</th>
-                <th>Thưởng / Phạt Thi đua</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody id="eval-table-body"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 4 -->
-    <section id="tab-backup" class="tab-panel">
-      <div class="card">
-        <div class="card-title">1. Xuất File Sheet Tổng hợp Lương & Chấm công Cuối tháng</div>
-        <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px;">
-          Hệ thống sẽ tổng hợp toàn bộ dữ liệu Nhân sự, Tài khoản ngân hàng, Tổng giờ làm, Lương cơ bản, Thưởng/Phạt và Thực lĩnh cuối tháng kèm chi tiết từng ca chấm công ra file bảng tính chuẩn UTF-8 (Mở trực tiếp bằng <strong>Microsoft Excel</strong> hoặc tải lên <strong>Google Sheets</strong>).
-        </p>
-        <div class="form-grid" style="max-width: 750px;">
-          <div class="form-group">
-            <label>Chọn Tháng/Năm Xuất Báo cáo</label>
-            <input type="month" id="export-month-picker" value="2026-10">
-          </div>
-          <button class="btn btn-success" onclick="exportMonthlySheet()">📊 Tải File Sheet Tổng hợp Cuối tháng (.CSV)</button>
-          <button class="btn btn-secondary" onclick="exportAttendanceDetailSheet()">📋 Xuất Riêng Bảng Chấm công Chi tiết (.CSV)</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">2. Sao lưu (Backup) Dữ liệu Hệ thống & Đồng bộ Google Drive</div>
-        <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px;">
-          Toàn bộ dữ liệu đang được tự động lưu trên trình duyệt (`localStorage`). Bạn có thể xuất file dự phòng `.json` để lưu vào thư mục Google Drive trên máy, đẩy trực tiếp lên Google Drive thông qua Google Apps Script Webhook, hoặc khôi phục lại dữ liệu bất cứ lúc nào.
-        </p>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Tải File Lưu trữ về Máy / Thư mục Drive</label>
-            <button class="btn" onclick="exportBackupJSON()">⬇ Xuất File Backup (.JSON)</button>
-          </div>
-          <div class="form-group">
-            <label>Khôi phục Dữ liệu từ File Backup (.JSON)</label>
-            <input type="file" id="restore-json-input" accept=".json" onchange="importBackupJSON(this)">
-          </div>
-          <div class="form-group">
-            <label>Đồng bộ Trực tiếp lên Google Drive Cloud</label>
-            <button class="btn btn-warning" onclick="openDriveModal()">☁ Cấu hình & Đẩy lên Google Drive</button>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Họ và Tên Nhân viên</label>
+              <input type="text" id="new-emp-name" placeholder="VD: Vũ Vinh Sơn">
+            </div>
+            <div class="form-group">
+              <label>Lương cố định / giờ (VNĐ)</label>
+              <input type="number" id="new-emp-rate" placeholder="VD: 25000" value="25000">
+            </div>
+            <div class="form-group">
+              <label>Ngân hàng thụ hưởng</label>
+              <input type="text" id="new-emp-bank" placeholder="VD: Techcombank">
+            </div>
+            <div class="form-group">
+              <label>Số Tài khoản Ngân hàng</label>
+              <input type="text" id="new-emp-acc" placeholder="VD: 190388492010">
+            </div>
+            <button class="btn" onclick="addEmployee()">+ Lưu Nhân viên</button>
           </div>
         </div>
-      </div>
-    </section>
-  </main>
 
-  <!-- MODAL 1: SỬA NHÂN VIÊN -->
+        <!-- Khu vực tải ảnh chấm công -->
+        <div class="card">
+          <div class="card-title">
+            <span id="att-form-title">Ghi danh & Chấm công bằng Ảnh từ Gallery (AI Tự động Đọc Giờ Chụp)</span>
+            <span style="font-size:12px; color:var(--tech-mint); font-weight:600;" id="att-rule-badge">✓ Chỉ tính công trong tháng hiện tại</span>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Nhân viên Chấm công</label>
+              <select id="att-emp-select"></select>
+            </div>
+            <div class="form-group">
+              <label>Ảnh Check-in (Tải từ Gallery)</label>
+              <input type="file" id="att-checkin-file" accept="image/*" onchange="analyzeUploadedImage(this, 'checkin-meta-preview', 'att-manual-in')">
+              <div id="checkin-meta-preview" class="ocr-status">Chưa chọn ảnh</div>
+            </div>
+            <div class="form-group">
+              <label id="label-manual-in">Giờ Check-in (Trích xuất từ ảnh)</label>
+              <input type="datetime-local" id="att-manual-in" onchange="updateLiveDurationPreview()">
+            </div>
+            <div class="form-group">
+              <label>Ảnh Check-out (Tải từ Gallery)</label>
+              <input type="file" id="att-checkout-file" accept="image/*" onchange="analyzeUploadedImage(this, 'checkout-meta-preview', 'att-manual-out')">
+              <div id="checkout-meta-preview" class="ocr-status">Chưa chọn ảnh</div>
+            </div>
+            <div class="form-group">
+              <label id="label-manual-out">Giờ Check-out (Trích xuất từ ảnh)</label>
+              <input type="datetime-local" id="att-manual-out" onchange="updateLiveDurationPreview()">
+            </div>
+            <div class="form-group">
+              <label>Ghi chú Ca làm</label>
+              <input type="text" id="att-note" placeholder="VD: Đúng giờ, hoàn thành công việc">
+            </div>
+            <button class="btn btn-secondary" id="btn-record-att" onclick="recordAttendance()">+ Xác nhận Chấm công</button>
+          </div>
+
+          <div class="live-calc-banner" id="live-calc-banner">
+            <span>⏱ <strong>Thời gian làm việc đọc từ ảnh:</strong> <span id="live-calc-text">Hãy tải lên ảnh Check-in và Check-out từ Gallery để hệ thống đọc thời gian...</span></span>
+            <span id="live-calc-hours" style="font-weight:700; color:var(--tech-blue-dark); font-size:15px;">0.00 giờ</span>
+          </div>
+        </div>
+
+        <!-- Bảng thống kê chấm công -->
+        <div class="card">
+          <div class="card-title">
+            <span id="att-table-title">Bảng Thống kê Chấm công Chi tiết</span>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <input type="month" id="staff-month-filter" style="padding:5px 10px; border:1px solid var(--border-color); border-radius:6px; font-size:12px;" onchange="renderAll()">
+              <button class="btn btn-success btn-sm" id="table-export-btn" onclick="handleExportSheetAction()">📊 Tải Bảng Chấm công Cuối tháng (.CSV)</button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>1. Tên nhân viên</th>
+                  <th>2. Check in (Ảnh & Giờ chụp)</th>
+                  <th>3. Check out (Ảnh & Giờ chụp)</th>
+                  <th>4. Tổng giờ làm</th>
+                  <th>5. Lương cố định/h</th>
+                  <th>6. Thành tiền</th>
+                  <th>7. Ghi chú</th>
+                  <th class="admin-only" id="th-att-action">Thao tác (Sửa/Xóa)</th>
+                </tr>
+              </thead>
+              <tbody id="attendance-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: QUẢN LÝ NHÂN SỰ (CHỈ ADMIN) -->
+      <section id="tab-employees" class="tab-panel admin-only">
+        <div class="card">
+          <div class="card-title">
+            <span>Danh sách Nhân viên, Tài khoản Ngân hàng & Tổng Thu nhập (Quyền Admin)</span>
+            <button class="btn btn-sm" onclick="openAddEmployeeModal()">+ Thêm Nhân viên Mới</button>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Mã & Họ tên Nhân viên</th>
+                  <th>Tài khoản Ngân hàng</th>
+                  <th>Lương cố định/h & Giờ tích lũy</th>
+                  <th>Lương Cơ bản</th>
+                  <th>Thưởng / Phạt Thi đua</th>
+                  <th>Tổng thu nhập (Thực lĩnh)</th>
+                  <th>Thao tác (Chỉnh sửa / Xóa)</th>
+                </tr>
+              </thead>
+              <tbody id="employee-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: THI ĐUA KHEN THƯỞNG / PHẠT (CHỈ ADMIN) -->
+      <section id="tab-gamification" class="tab-panel admin-only">
+        <div class="card">
+          <div class="card-title">Báo cáo Hình ảnh Toàn phòng Cuối giờ làm & Chấm điểm Thi đua Khen thưởng / Phạt</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Nhân viên Báo cáo Cuối ca</label>
+              <select id="eval-emp-select"></select>
+            </div>
+            <div class="form-group">
+              <label>Ảnh chụp Toàn phòng Cuối giờ (Gallery)</label>
+              <input type="file" id="eval-room-photo" accept="image/*" onchange="analyzeUploadedImage(this, 'room-meta-preview', null)">
+              <small id="room-meta-preview" class="ocr-status"></small>
+            </div>
+            <div class="form-group">
+              <label>Tiến độ Công việc trong ngày (%)</label>
+              <input type="number" id="eval-progress" value="100" min="0" max="100">
+            </div>
+            <div class="form-group">
+              <label>Vấn đề phát sinh trong ngày</label>
+              <input type="text" id="eval-issues" placeholder="VD: Phòng sạch sẽ, đã tắt thiết bị">
+            </div>
+            <div class="form-group">
+              <label>Loại Thi đua</label>
+              <select id="eval-type">
+                <option value="reward">Khen thưởng (+ VNĐ)</option>
+                <option value="penalty">Xử phạt (- VNĐ)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Số tiền Thưởng / Phạt (VNĐ)</label>
+              <input type="number" id="eval-amount" value="50000" step="10000">
+            </div>
+            <button class="btn" onclick="submitEndShiftReport()">Lưu Báo cáo & Cập nhật Lương</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Nhật ký Ảnh Toàn phòng Cuối ca, Tiến độ & Quyết định Thưởng / Phạt</div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nhân viên</th>
+                  <th>Ảnh Toàn phòng & Giờ chụp</th>
+                  <th>Tiến độ Công việc</th>
+                  <th>Các vấn đề trong ngày</th>
+                  <th>Thưởng / Phạt Thi đua</th>
+                  <th>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="eval-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: QUẢN LÝ TÀI KHOẢN & CẤP QUYỀN ADMIN (CHỈ ADMIN) -->
+      <section id="tab-accounts" class="tab-panel admin-only">
+        <div class="card">
+          <div class="card-title">
+            <span>Tạo Tài khoản Mới hoặc Cấp quyền Admin trực tiếp</span>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Họ và Tên Nhân viên</label>
+              <input type="text" id="acc-new-fullname" placeholder="VD: Trần Minh Hiếu">
+            </div>
+            <div class="form-group">
+              <label>Tên đăng nhập (Username)</label>
+              <input type="text" id="acc-new-username" placeholder="VD: tranminhhieu">
+            </div>
+            <div class="form-group">
+              <label>Mật khẩu</label>
+              <input type="text" id="acc-new-password" placeholder="Nhập mật khẩu">
+            </div>
+            <div class="form-group">
+              <label>Lương/giờ (VNĐ)</label>
+              <input type="number" id="acc-new-rate" value="25000">
+            </div>
+            <div class="form-group">
+              <label>Phân quyền Hệ thống</label>
+              <select id="acc-new-role">
+                <option value="staff">Nhân viên (Chỉ chấm công cá nhân)</option>
+                <option value="admin">Quản trị viên (Toàn quyền Admin)</option>
+              </select>
+            </div>
+            <button class="btn" onclick="adminCreateAccount()">+ Tạo Tài khoản</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>Danh sách Tài khoản Đã Đăng ký & Cấp quyền Admin</span>
+            <span style="font-size:12px; color:var(--text-secondary);">Admin gốc: <strong>admin1107</strong></span>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tên đăng nhập</th>
+                  <th>Mật khẩu</th>
+                  <th>Họ và Tên Nhân viên</th>
+                  <th>Mã Nhân sự Liên kết</th>
+                  <th>Quyền hiện tại</th>
+                  <th>Thao tác Phân quyền & Quản lý</th>
+                </tr>
+              </thead>
+              <tbody id="accounts-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: BACKUP GOOGLE DRIVE & XUẤT FILE SHEET CUỐI THÁNG (CHỈ ADMIN) -->
+      <section id="tab-backup" class="tab-panel admin-only">
+        <div class="card">
+          <div class="card-title">1. Xuất File Sheet Tổng hợp Lương & Chấm công Cuối tháng (Toàn hệ thống)</div>
+          <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px;">
+            Hệ thống sẽ tổng hợp toàn bộ dữ liệu Nhân sự, Tài khoản ngân hàng, Tổng giờ làm, Lương cơ bản, Thưởng/Phạt và Thực lĩnh cuối tháng kèm chi tiết từng ca chấm công ra file bảng tính chuẩn UTF-8 (Mở trực tiếp bằng <strong>Microsoft Excel</strong> hoặc tải lên <strong>Google Sheets</strong>).
+          </p>
+          <div class="form-grid" style="max-width: 750px;">
+            <div class="form-group">
+              <label>Chọn Tháng/Năm Xuất Báo cáo</label>
+              <input type="month" id="export-month-picker" value="2026-10">
+            </div>
+            <button class="btn btn-success" onclick="exportMonthlySheet()">📊 Tải File Sheet Tổng hợp Toàn bộ (.CSV)</button>
+            <button class="btn btn-secondary" onclick="exportAttendanceDetailSheet()">📋 Xuất Riêng Bảng Chấm công Chi tiết (.CSV)</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">2. Sao lưu (Backup) Dữ liệu Hệ thống & Đồng bộ Google Drive</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Tải File Lưu trữ về Máy / Thư mục Drive</label>
+              <button class="btn" onclick="exportBackupJSON()">⬇ Xuất File Backup (.JSON)</button>
+            </div>
+            <div class="form-group">
+              <label>Khôi phục Dữ liệu từ File Backup (.JSON)</label>
+              <input type="file" id="restore-json-input" accept=".json" onchange="importBackupJSON(this)">
+            </div>
+            <div class="form-group">
+              <label>Đồng bộ Trực tiếp lên Google Drive Cloud</label>
+              <button class="btn btn-warning" onclick="openDriveModal()">☁ Cấu hình & Đẩy lên Google Drive</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL 1: SỬA NHÂN VIÊN (ADMIN) -->
   <div class="modal-overlay" id="modal-edit-employee">
     <div class="modal-box">
       <div class="modal-header">
@@ -554,7 +751,7 @@
     </div>
   </div>
 
-  <!-- MODAL 2: SỬA CHẤM CÔNG -->
+  <!-- MODAL 2: SỬA CHẤM CÔNG (ADMIN) -->
   <div class="modal-overlay" id="modal-edit-attendance">
     <div class="modal-box">
       <div class="modal-header">
@@ -603,7 +800,7 @@
     </div>
   </div>
 
-  <!-- MODAL 3: GOOGLE DRIVE -->
+  <!-- MODAL 3: GOOGLE DRIVE (ADMIN) -->
   <div class="modal-overlay" id="modal-drive-backup">
     <div class="modal-box">
       <div class="modal-header">
@@ -611,12 +808,11 @@
         <button class="modal-close" onclick="closeModal('modal-drive-backup')">&times;</button>
       </div>
       <div style="font-size:13px; line-height:1.6; color:var(--text-secondary); margin-bottom:14px;">
-        Bạn có thể sao lưu theo 2 cách:
-        <br>1. <strong>Tải trực tiếp file Backup (`.json`)</strong> vào thư mục <em>Google Drive for Desktop</em> hoặc tải lên Drive thủ công.
+        1. <strong>Tải trực tiếp file Backup (`.json`)</strong> vào thư mục <em>Google Drive</em>.
         <br>2. <strong>Tự động đẩy lên Google Drive</strong> qua đường dẫn Google Apps Script Web App URL.
       </div>
       <div class="form-group" style="margin-bottom:14px;">
-        <label>Google Apps Script Webhook URL (Tùy chọn để đẩy tự động lên Drive)</label>
+        <label>Google Apps Script Webhook URL</label>
         <input type="url" id="drive-webhook-url" placeholder="https://script.google.com/macros/s/.../exec">
       </div>
       <div class="modal-footer">
@@ -627,18 +823,35 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'IPOS_HRM_PRO_OCR_V3';
+    const STORAGE_KEY = 'IPOS_HRM_RBAC_V4';
+    const SESSION_KEY = 'IPOS_HRM_CURRENT_USER_V4';
 
+    // Khởi tạo trạng thái mặc định với tài khoản admin1107 / 11072007edtech
     const defaultState = {
+      users: [
+        {
+          username: 'admin1107',
+          password: '11072007edtech',
+          role: 'admin',
+          fullName: 'Quản trị viên (Admin)',
+          empId: null
+        },
+        {
+          username: 'vuvinhson',
+          password: '123456',
+          role: 'staff',
+          fullName: 'Vũ Vinh Sơn',
+          empId: 'NV01'
+        }
+      ],
       employees: [
-        { id: 'NV01', name: 'Nguyễn Hoàng Anh', rate: 35000, bank: 'Techcombank', account: '190366889901' },
-        { id: 'NV02', name: 'Trần Khánh Linh', rate: 40000, bank: 'Vietcombank', account: '001100445566' },
-        { id: 'NV03', name: 'Vũ Vinh Sơn', rate: 25000, bank: 'MB Bank', account: '889900112233' }
+        { id: 'NV01', name: 'Vũ Vinh Sơn', rate: 25000, bank: 'MB Bank', account: '889900112233' },
+        { id: 'NV02', name: 'Nguyễn Hoàng Anh', rate: 35000, bank: 'Techcombank', account: '190366889901' }
       ],
       attendance: [
         {
           id: 'ATT_SAMPLE_1',
-          empId: 'NV03',
+          empId: 'NV01',
           checkInTime: new Date(2026, 9, 26, 16, 40, 0).getTime(),
           checkOutTime: new Date(2026, 9, 26, 19, 23, 0).getTime(),
           checkInThumb: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><rect width="50" height="50" fill="%231A73E8"/><text x="50%" y="55%" fill="white" font-size="10" text-anchor="middle">16:40</text></svg>',
@@ -653,11 +866,30 @@
     };
 
     let state = loadState();
+    let currentUser = null;
 
     function loadState() {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) return JSON.parse(saved);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          // Đảm bảo tài khoản admin1107 luôn tồn tại đúng mật khẩu yêu cầu
+          if (!parsed.users) parsed.users = [];
+          const rootAdmin = parsed.users.find(u => u.username === 'admin1107');
+          if (!rootAdmin) {
+            parsed.users.unshift({
+              username: 'admin1107',
+              password: '11072007edtech',
+              role: 'admin',
+              fullName: 'Quản trị viên (Admin)',
+              empId: null
+            });
+          } else {
+            rootAdmin.password = '11072007edtech';
+            rootAdmin.role = 'admin';
+          }
+          return parsed;
+        }
       } catch (e) {
         console.warn('Không thể đọc localStorage:', e);
       }
@@ -672,6 +904,237 @@
       }
     }
 
+    /* ==================== XÁC THỰC ĐĂNG NHẬP / ĐĂNG KÝ / PHÂN QUYỀN ==================== */
+    function switchAuthTab(mode) {
+      const loginForm = document.getElementById('form-login');
+      const regForm = document.getElementById('form-register');
+      const btnLogin = document.getElementById('tab-btn-login');
+      const btnReg = document.getElementById('tab-btn-register');
+
+      if (mode === 'login') {
+        loginForm.classList.remove('hidden');
+        regForm.classList.add('hidden');
+        btnLogin.classList.add('active');
+        btnReg.classList.remove('active');
+      } else {
+        loginForm.classList.add('hidden');
+        regForm.classList.remove('hidden');
+        btnLogin.classList.remove('active');
+        btnReg.classList.add('active');
+      }
+    }
+
+    function handleLogin() {
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value;
+
+      if (!username || !password) {
+        return alert('Vui lòng nhập đầy đủ Tên đăng nhập và Mật khẩu!');
+      }
+
+      const user = state.users.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
+      if (!user) {
+        return alert('Tên đăng nhập hoặc mật khẩu không chính xác!');
+      }
+
+      currentUser = user;
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
+      document.getElementById('login-password').value = '';
+      applyRolePermissions();
+    }
+
+    function handleRegister() {
+      const fullName = document.getElementById('reg-fullname').value.trim();
+      const username = document.getElementById('reg-username').value.trim().replace(/\s+/g, '');
+      const password = document.getElementById('reg-password').value;
+      const bank = document.getElementById('reg-bank').value.trim() || 'Chưa cập nhật';
+      const account = document.getElementById('reg-acc').value.trim() || 'Chưa cập nhật';
+
+      if (!fullName || !username || !password) {
+        return alert('Vui lòng điền đầy đủ Họ tên, Tên đăng nhập và Mật khẩu!');
+      }
+
+      if (state.users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+        return alert('Tên đăng nhập này đã tồn tại! Vui lòng chọn tên đăng nhập khác.');
+      }
+
+      // Tự động tạo hồ sơ nhân sự tương ứng cho nhân viên đăng ký mới
+      const nextNum = state.employees.length + 1;
+      const empId = 'NV' + (nextNum < 10 ? '0' + nextNum : nextNum) + '_' + Date.now().toString().slice(-2);
+
+      state.employees.push({
+        id: empId,
+        name: fullName,
+        rate: 25000,
+        bank: bank,
+        account: account
+      });
+
+      const newUser = {
+        username: username,
+        password: password,
+        role: 'staff', // Mặc định là nhân viên, Admin có thể nâng quyền sau
+        fullName: fullName,
+        empId: empId
+      };
+
+      state.users.push(newUser);
+      saveState();
+
+      alert(`Đăng ký tài khoản "${username}" thành công! Hệ thống sẽ tự động đăng nhập cho bạn.`);
+      currentUser = newUser;
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(newUser));
+      applyRolePermissions();
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      sessionStorage.removeItem(SESSION_KEY);
+      document.getElementById('app-screen').classList.add('hidden');
+      document.getElementById('auth-screen').classList.remove('hidden');
+    }
+
+    function isAdmin() {
+      return currentUser && currentUser.role === 'admin';
+    }
+
+    function applyRolePermissions() {
+      if (!currentUser) {
+        document.getElementById('auth-screen').classList.remove('hidden');
+        document.getElementById('app-screen').classList.add('hidden');
+        return;
+      }
+
+      // Đồng bộ lại thông tin user mới nhất từ state
+      const latestUser = state.users.find(u => u.username === currentUser.username);
+      if (latestUser) currentUser = latestUser;
+
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('app-screen').classList.remove('hidden');
+
+      document.getElementById('current-user-display').textContent = `${currentUser.fullName} (${currentUser.username})`;
+      const roleBadge = document.getElementById('current-role-badge');
+
+      // Đặt bộ lọc tháng hiện tại mặc định
+      const now = new Date();
+      const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const staffMonthFilter = document.getElementById('staff-month-filter');
+      if (staffMonthFilter && !staffMonthFilter.value) {
+        staffMonthFilter.value = currentMonthStr;
+      }
+
+      const adminElements = document.querySelectorAll('.admin-only');
+      const manualInInput = document.getElementById('att-manual-in');
+      const manualOutInput = document.getElementById('att-manual-out');
+      const empSelect = document.getElementById('att-emp-select');
+
+      if (isAdmin()) {
+        roleBadge.textContent = 'QUYỀN ADMIN TOÀN HỆ THỐNG';
+        roleBadge.className = 'role-badge-admin';
+        adminElements.forEach(el => el.classList.remove('hidden'));
+
+        // Admin có thể chỉnh sửa giờ thủ công và chọn bất kỳ nhân viên nào
+        manualInInput.removeAttribute('readonly');
+        manualOutInput.removeAttribute('readonly');
+        empSelect.removeAttribute('disabled');
+        document.getElementById('label-manual-in').textContent = 'Giờ Check-in (Tự điền từ ảnh / Có thể sửa)';
+        document.getElementById('label-manual-out').textContent = 'Giờ Check-out (Tự điền từ ảnh / Có thể sửa)';
+        document.getElementById('header-export-btn').textContent = '📊 Xuất Sheet Tổng hợp Toàn Hệ thống (.CSV)';
+        document.getElementById('table-export-btn').textContent = '📊 Xuất Sheet Tổng hợp (.CSV)';
+        document.getElementById('att-table-title').textContent = 'Bảng Thống kê Chấm công Toàn Hệ thống (Cho phép Sửa, Cập nhật & Xóa)';
+      } else {
+        roleBadge.textContent = 'NHÂN VIÊN (CHẤM CÔNG CÁ NHÂN)';
+        roleBadge.className = 'role-badge-staff';
+        adminElements.forEach(el => el.classList.add('hidden'));
+
+        // Nhân viên chỉ được chấm công bằng tải ảnh Gallery (Khóa nhập giờ tay & khóa đổi tên người khác)
+        manualInInput.setAttribute('readonly', 'true');
+        manualOutInput.setAttribute('readonly', 'true');
+        document.getElementById('label-manual-in').textContent = 'Giờ Check-in (Chỉ đọc từ ảnh Gallery)';
+        document.getElementById('label-manual-out').textContent = 'Giờ Check-out (Chỉ đọc từ ảnh Gallery)';
+        document.getElementById('header-export-btn').textContent = '📊 Tải Bảng Chấm công Cá nhân Cuối tháng (.CSV)';
+        document.getElementById('table-export-btn').textContent = '📊 Tải Bảng Chấm công Cá nhân (.CSV)';
+        document.getElementById('att-table-title').textContent = `Bảng Chấm công Cá nhân trong Tháng của ${currentUser.fullName}`;
+
+        // Đưa về Tab 1
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-attendance').classList.add('active');
+        document.querySelector('.nav-tabs .tab-btn').classList.add('active');
+      }
+
+      renderAll();
+    }
+
+    /* ==================== QUẢN LÝ TÀI KHOẢN & CẤP QUYỀN ADMIN ==================== */
+    function toggleAccountRole(username) {
+      if (!isAdmin()) return;
+      if (username === 'admin1107') {
+        return alert('Không thể hạ quyền của tài khoản Admin gốc (admin1107)!');
+      }
+      const user = state.users.find(u => u.username === username);
+      if (!user) return;
+
+      user.role = user.role === 'admin' ? 'staff' : 'admin';
+      saveState();
+      renderAll();
+      alert(`Đã cập nhật quyền của tài khoản "${username}" thành: ${user.role === 'admin' ? 'QUẢN TRỊ VIÊN (ADMIN)' : 'NHÂN VIÊN'}!`);
+    }
+
+    function adminCreateAccount() {
+      if (!isAdmin()) return;
+      const fullName = document.getElementById('acc-new-fullname').value.trim();
+      const username = document.getElementById('acc-new-username').value.trim().replace(/\s+/g, '');
+      const password = document.getElementById('acc-new-password').value.trim();
+      const rate = parseFloat(document.getElementById('acc-new-rate').value) || 25000;
+      const role = document.getElementById('acc-new-role').value;
+
+      if (!fullName || !username || !password) {
+        return alert('Vui lòng nhập đầy đủ Họ tên, Tên đăng nhập và Mật khẩu!');
+      }
+      if (state.users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+        return alert('Tên đăng nhập đã tồn tại!');
+      }
+
+      const nextNum = state.employees.length + 1;
+      const empId = 'NV' + (nextNum < 10 ? '0' + nextNum : nextNum) + '_' + Date.now().toString().slice(-2);
+
+      state.employees.push({
+        id: empId,
+        name: fullName,
+        rate: rate,
+        bank: 'Chưa cập nhật',
+        account: 'Chưa cập nhật'
+      });
+
+      state.users.push({
+        username,
+        password,
+        role,
+        fullName,
+        empId
+      });
+
+      document.getElementById('acc-new-fullname').value = '';
+      document.getElementById('acc-new-username').value = '';
+      document.getElementById('acc-new-password').value = '';
+      saveState();
+      renderAll();
+      alert(`Đã tạo tài khoản "${username}" và hồ sơ nhân viên "${fullName}" thành công!`);
+    }
+
+    function deleteUserAccount(username) {
+      if (!isAdmin()) return;
+      if (username === 'admin1107') {
+        return alert('Không thể xóa tài khoản Admin gốc (admin1107)!');
+      }
+      if (!confirm(`Bạn có chắc chắn muốn xóa tài khoản "${username}"?`)) return;
+      state.users = state.users.filter(u => u.username !== username);
+      saveState();
+      renderAll();
+    }
+
+    /* ==================== HÀM TIỆN ÍCH & ĐỌC ẢNH AI OCR ==================== */
     function fileToDataURL(file) {
       return new Promise((resolve) => {
         if (!file) return resolve(null);
@@ -697,22 +1160,13 @@
       return Math.round(num).toLocaleString('vi-VN') + ' VNĐ';
     }
 
-    /* =========================================================================
-       BỘ XỬ LÝ ĐỌC ẢNH THÔNG MINH (AI OCR TESSERACT + EXIF METADATA)
-       Đọc trực tiếp dòng chữ "lúc 16:40 Thứ Hai, ngày 26 tháng 10, 2026" trong ảnh
-       ========================================================================= */
     function parseTimestampFromOCRText(rawText) {
       if (!rawText) return null;
-      // Chuẩn hóa khoảng trắng và xuống dòng
       const text = rawText.replace(/\r?\n/g, ' ').replace(/\s+/g, ' ');
-      console.log('Văn bản AI đọc được từ ảnh:', text);
-
       let hour = null, minute = null, day = null, month = null, year = null;
 
-      // 1. Tìm giờ:phút theo mẫu "lúc 16:40", "16:40", "19:23"
       const timeRegex = /(?:lúc|luc|time|at)?\s*\b([01]?\d|2[0-3])\s*[:.]\s*([0-5]\d)\b/gi;
       let timeMatches = [...text.matchAll(timeRegex)];
-      // Ưu tiên chuỗi có chữ "lúc" đứng trước (chuẩn iOS Tiếng Việt)
       const lucMatch = text.match(/(?:lúc|luc)\s*([01]?\d|2[0-3])\s*[:.]\s*([0-5]\d)/i);
       if (lucMatch) {
         hour = parseInt(lucMatch[1], 10);
@@ -722,9 +1176,7 @@
         minute = parseInt(timeMatches[0][2], 10);
       }
 
-      // 2. Tìm Ngày Tháng Năm theo mẫu iOS Tiếng Việt: "ngày 26 tháng 10, 2026" hoặc "26 tháng 10 2026"
       const vnDateMatch = text.match(/(?:ngày|ngay)?\s*(\d{1,2})\s*(?:tháng|thang|thg)\s*(\d{1,2})[\s,./-]*(\d{4})/i);
-      // Hoặc mẫu DD/MM/YYYY hay YYYY-MM-DD
       const slashDateMatch = text.match(/\b(\d{1,2})[/-](\d{1,2})[/-](20\d{2})\b/);
       const isoDateMatch = text.match(/\b(20\d{2})[/-](\d{1,2})[/-](\d{1,2})\b/);
 
@@ -748,9 +1200,7 @@
         const finalMonth = (month ? month - 1 : now.getMonth());
         const finalDay = day || now.getDate();
         const parsedDate = new Date(finalYear, finalMonth, finalDay, hour, minute, 0);
-        if (!isNaN(parsedDate.getTime())) {
-          return parsedDate.getTime();
-        }
+        if (!isNaN(parsedDate.getTime())) return parsedDate.getTime();
       }
       return null;
     }
@@ -761,7 +1211,6 @@
         EXIF.getData(file, function() {
           const exifDate = EXIF.getTag(this, 'DateTimeOriginal') || EXIF.getTag(this, 'DateTime');
           if (exifDate) {
-            // Định dạng EXIF chuẩn: "YYYY:MM:DD HH:MM:SS"
             const parts = exifDate.split(/[: ]/);
             if (parts.length >= 5) {
               const d = new Date(
@@ -790,11 +1239,9 @@
       }
 
       try {
-        // Bước 1: Kiểm tra EXIF gốc từ Camera trước
         let detectedTime = await readExifDateTime(file);
         let sourceType = 'EXIF Camera gốc';
 
-        // Bước 2: Dùng AI OCR (Tesseract.js) quét chữ ngày giờ bên trong bức ảnh (VD: "lúc 16:40 Thứ Hai, ngày 26 tháng 10, 2026")
         if (!detectedTime && window.Tesseract) {
           const result = await Tesseract.recognize(file, 'vie+eng');
           const ocrTime = parseTimestampFromOCRText(result.data.text);
@@ -804,7 +1251,6 @@
           }
         }
 
-        // Bước 3: Nếu trong ảnh không có chữ ngày giờ và không có EXIF thì mới dùng lastModified
         if (!detectedTime) {
           detectedTime = file.lastModified;
           sourceType = 'Thời gian file thiết bị';
@@ -825,7 +1271,6 @@
           updateLiveDurationPreview();
         }
       } catch (err) {
-        console.error('Lỗi đọc ảnh:', err);
         const fallback = file.lastModified || Date.now();
         if (targetInputId) document.getElementById(targetInputId).value = msToDatetimeLocal(fallback);
         if (statusEl) {
@@ -843,15 +1288,14 @@
       const hoursEl = document.getElementById('live-calc-hours');
 
       if (!inVal || !outVal) {
-        textEl.textContent = 'Hãy tải đủ ảnh Check-in và Check-out (hoặc chọn giờ) để tính tổng thời gian làm việc.';
+        textEl.textContent = 'Hãy tải đủ ảnh Check-in và Check-out từ Gallery để hệ thống đọc thời gian.';
         hoursEl.textContent = '0.00 giờ';
         return;
       }
 
       const inMs = new Date(inVal).getTime();
       const outMs = new Date(outVal).getTime();
-      const diffMinutes = Math.round((outMs - inMs) / 60000);
-      const absMinutes = Math.abs(diffMinutes);
+      const absMinutes = Math.abs(Math.round((outMs - inMs) / 60000));
       const hrs = Math.floor(absMinutes / 60);
       const mins = absMinutes % 60;
       const decimalHours = (absMinutes / 60).toFixed(2);
@@ -861,6 +1305,9 @@
     }
 
     function switchTab(tabId, btn) {
+      if (!isAdmin() && tabId !== 'tab-attendance') {
+        return alert('Tài khoản Nhân viên chỉ có quyền truy cập mục Chấm công Cá nhân!');
+      }
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
@@ -872,8 +1319,9 @@
       document.getElementById(modalId).classList.remove('active');
     }
 
-    /* ==================== 1. QUẢN LÝ NHÂN VIÊN ==================== */
+    /* ==================== 1. QUẢN LÝ NHÂN VIÊN (CHỈ ADMIN) ==================== */
     function addEmployee() {
+      if (!isAdmin()) return;
       const name = document.getElementById('new-emp-name').value.trim();
       const rate = parseFloat(document.getElementById('new-emp-rate').value) || 25000;
       const bank = document.getElementById('new-emp-bank').value.trim() || 'Chưa cập nhật';
@@ -892,11 +1340,13 @@
     }
 
     function openAddEmployeeModal() {
+      if (!isAdmin()) return;
       switchTab('tab-attendance', document.querySelectorAll('.tab-btn')[0]);
       document.getElementById('new-emp-name').focus();
     }
 
     function openEditEmployeeModal(empId) {
+      if (!isAdmin()) return;
       const emp = state.employees.find(e => e.id === empId);
       if (!emp) return;
       document.getElementById('edit-emp-id').value = emp.id;
@@ -908,6 +1358,7 @@
     }
 
     function saveEditedEmployee() {
+      if (!isAdmin()) return;
       const id = document.getElementById('edit-emp-id').value;
       const name = document.getElementById('edit-emp-name').value.trim();
       const rate = parseFloat(document.getElementById('edit-emp-rate').value) || 0;
@@ -922,6 +1373,10 @@
         emp.rate = rate;
         emp.bank = bank;
         emp.account = account;
+        // Đồng bộ tên hiển thị trên tài khoản liên kết nếu có
+        const linkedUser = state.users.find(u => u.empId === id);
+        if (linkedUser) linkedUser.fullName = name;
+
         if (syncAtt) {
           state.attendance.forEach(a => {
             if (a.empId === id) a.rate = rate;
@@ -934,6 +1389,7 @@
     }
 
     function deleteEmployee(empId) {
+      if (!isAdmin()) return;
       const emp = state.employees.find(e => e.id === empId);
       if (!emp) return;
       if (!confirm(`Bạn có chắc chắn muốn xóa nhân viên "${emp.name}" cùng các dữ liệu liên quan?`)) return;
@@ -944,35 +1400,47 @@
       renderAll();
     }
 
-    /* ==================== 2. QUẢN LÝ CHẤM CÔNG (KHÔNG ÉP CỨNG 4 GIỜ) ==================== */
+    /* ==================== 2. CHẤM CÔNG (KIỂM SOÁT QUYỀN NHÂN VIÊN & ADMIN) ==================== */
     async function recordAttendance() {
-      const empId = document.getElementById('att-emp-select').value;
+      const empId = isAdmin() ? document.getElementById('att-emp-select').value : currentUser.empId;
       const emp = state.employees.find(e => e.id === empId);
-      if (!emp) return alert('Vui lòng thêm hoặc chọn nhân viên trước!');
+      if (!emp) return alert('Không tìm thấy hồ sơ nhân viên hợp lệ!');
 
       const inFile = document.getElementById('att-checkin-file').files[0];
       const outFile = document.getElementById('att-checkout-file').files[0];
       const manualIn = document.getElementById('att-manual-in').value;
       const manualOut = document.getElementById('att-manual-out').value;
 
+      // Ràng buộc đối với Nhân viên: Bắt buộc phải tải đủ 2 ảnh từ Gallery
+      if (!isAdmin() && (!inFile || !outFile)) {
+        return alert('Tài khoản Nhân viên bắt buộc phải tải đủ 2 ảnh Check-in và Check-out từ Gallery để chấm công!');
+      }
+
       if (!manualIn || !manualOut) {
-        return alert('Vui lòng tải ảnh lên (để AI tự đọc giờ) hoặc kiểm tra lại ô Giờ Check-in / Check-out!');
+        return alert('Vui lòng tải ảnh lên để hệ thống trích xuất giờ Check-in / Check-out!');
       }
 
       let t1 = new Date(manualIn).getTime();
       let t2 = new Date(manualOut).getTime();
 
-      // Tự động sắp xếp giờ nhỏ hơn là Check-in, giờ lớn hơn là Check-out nếu người dùng chọn ngược ảnh
       const checkInTime = Math.min(t1, t2);
       const checkOutTime = Math.max(t1, t2);
 
-      // Tính chính xác số giờ làm việc thực tế (Không còn ép về 4.00 giờ)
-      const diffHours = (checkOutTime - checkInTime) / 3600000;
-      if (diffHours <= 0) {
-        return alert('Thời gian Check-in và Check-out đang trùng nhau (0 giờ). Vui lòng kiểm tra lại ảnh hoặc chỉnh lại giờ!');
+      // Ràng buộc đối với Nhân viên: Chỉ được chấm công của bản thân trong tháng hiện tại
+      if (!isAdmin()) {
+        const now = new Date();
+        const inDate = new Date(checkInTime);
+        if (inDate.getMonth() !== now.getMonth() || inDate.getFullYear() !== now.getFullYear()) {
+          return alert(`Bạn chỉ được phép chấm công các ca làm việc trong tháng hiện tại (Tháng ${now.getMonth() + 1}/${now.getFullYear()}). Thời gian đọc từ ảnh đang là Tháng ${inDate.getMonth() + 1}/${inDate.getFullYear()}!`);
+        }
       }
 
-      const note = document.getElementById('att-note').value.trim() || 'Đã xác thực thời gian từ ảnh';
+      const diffHours = (checkOutTime - checkInTime) / 3600000;
+      if (diffHours <= 0) {
+        return alert('Thời gian Check-in và Check-out đang trùng nhau (0 giờ). Vui lòng kiểm tra lại ảnh!');
+      }
+
+      const note = document.getElementById('att-note').value.trim() || 'Chấm công bằng ảnh Gallery';
 
       const defaultInSvg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><rect width="50" height="50" fill="%231A73E8"/><text x="50%" y="55%" fill="white" font-size="10" text-anchor="middle">IN</text></svg>';
       const defaultOutSvg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><rect width="50" height="50" fill="%2312B5CB"/><text x="50%" y="55%" fill="white" font-size="10" text-anchor="middle">OUT</text></svg>';
@@ -996,12 +1464,17 @@
       document.getElementById('att-checkout-file').value = '';
       document.getElementById('checkin-meta-preview').textContent = 'Chưa chọn ảnh';
       document.getElementById('checkout-meta-preview').textContent = 'Chưa chọn ảnh';
+      document.getElementById('att-manual-in').value = '';
+      document.getElementById('att-manual-out').value = '';
       document.getElementById('att-note').value = '';
+      updateLiveDurationPreview();
       saveState();
       renderAll();
+      alert('Đã ghi nhận chấm công thành công!');
     }
 
     function openEditAttendanceModal(attId) {
+      if (!isAdmin()) return;
       const row = state.attendance.find(a => a.id === attId);
       if (!row) return;
 
@@ -1031,6 +1504,7 @@
     }
 
     async function saveEditedAttendance() {
+      if (!isAdmin()) return;
       const attId = document.getElementById('edit-att-id').value;
       const row = state.attendance.find(a => a.id === attId);
       if (!row) return;
@@ -1056,14 +1530,16 @@
     }
 
     function deleteAttendance(attId) {
+      if (!isAdmin()) return;
       if (!confirm('Bạn có chắc chắn muốn xóa dòng chấm công này?')) return;
       state.attendance = state.attendance.filter(a => a.id !== attId);
       saveState();
       renderAll();
     }
 
-    /* ==================== 3. THI ĐUA THƯỞNG / PHẠT ==================== */
+    /* ==================== 3. THI ĐUA THƯỞNG / PHẠT (CHỈ ADMIN) ==================== */
     async function submitEndShiftReport() {
+      if (!isAdmin()) return;
       const empId = document.getElementById('eval-emp-select').value;
       const file = document.getElementById('eval-room-photo').files[0];
       const progress = parseInt(document.getElementById('eval-progress').value) || 100;
@@ -1093,91 +1569,76 @@
     }
 
     function deleteEvaluation(evId) {
+      if (!isAdmin()) return;
       if (!confirm('Xóa bản ghi thưởng/phạt này?')) return;
       state.evaluations = state.evaluations.filter(ev => ev.id !== evId);
       saveState();
       renderAll();
     }
 
-    /* ==================== 4. BACKUP & XUẤT SHEET CUỐI THÁNG ==================== */
-    function exportBackupJSON() {
-      const backupPayload = {
-        exportedAt: new Date().toISOString(),
-        system: 'iPOS HRM Cloud Pro',
-        data: state
-      };
-      const blob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      const dateStr = new Date().toISOString().slice(0, 10);
-      a.href = url;
-      a.download = `iPOS_HRM_Backup_${dateStr}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function importBackupJSON(input) {
-      const file = input.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => {
-        try {
-          const parsed = JSON.parse(e.target.result);
-          const restoredState = parsed.data || parsed;
-          if (!restoredState.employees || !restoredState.attendance) {
-            return alert('File JSON không đúng định dạng Backup của iPOS HRM!');
-          }
-          state = restoredState;
-          saveState();
-          renderAll();
-          alert('Đã khôi phục dữ liệu thành công!');
-        } catch (err) {
-          alert('Lỗi đọc file Backup: ' + err.message);
-        }
-      };
-      reader.readAsText(file);
-    }
-
-    function openDriveModal() {
-      document.getElementById('drive-webhook-url').value = state.driveWebhookUrl || '';
-      document.getElementById('modal-drive-backup').classList.add('active');
-    }
-
-    async function uploadBackupToGoogleDrive() {
-      const webhookUrl = document.getElementById('drive-webhook-url').value.trim();
-      state.driveWebhookUrl = webhookUrl;
-      saveState();
-
-      if (!webhookUrl) {
-        exportBackupJSON();
-        alert('Đã tải file Backup (.json) về máy!');
-        return;
-      }
-
-      try {
-        await fetch(webhookUrl, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            exportedAt: new Date().toISOString(),
-            system: 'iPOS HRM Cloud Pro',
-            data: state
-          })
-        });
-        alert('Đã gửi bản sao lưu lên Google Drive thành công!');
-        closeModal('modal-drive-backup');
-      } catch (err) {
-        exportBackupJSON();
+    /* ==================== 4. XUẤT FILE SHEET (PHÂN QUYỀN ADMIN VS CÁ NHÂN) ==================== */
+    function handleExportSheetAction() {
+      if (isAdmin()) {
+        exportMonthlySheet();
+      } else {
+        exportPersonalMonthlySheet();
       }
     }
 
+    // Nhân viên chỉ tải được bảng chấm công của chính bản thân trong tháng
+    function exportPersonalMonthlySheet() {
+      if (!currentUser || !currentUser.empId) {
+        return alert('Tài khoản của bạn chưa gắn với mã nhân viên!');
+      }
+      const emp = state.employees.find(e => e.id === currentUser.empId);
+      if (!emp) return;
+
+      const monthVal = document.getElementById('staff-month-filter')?.value || '2026-10';
+      const [yearFilter, monthFilter] = monthVal.split('-').map(Number);
+
+      const myAtt = state.attendance.filter(a => {
+        const d = new Date(a.checkInTime);
+        return a.empId === emp.id && (!yearFilter || (d.getFullYear() === yearFilter && (d.getMonth() + 1) === monthFilter));
+      });
+
+      const totalHours = myAtt.reduce((s, a) => s + a.hours, 0);
+      const totalPay = myAtt.reduce((s, a) => s + (a.hours * a.rate), 0);
+
+      let csvRows = [];
+      csvRows.push([`BẢNG CHẤM CÔNG CÁ NHÂN CUỐI THÁNG (${monthVal})`]);
+      csvRows.push([`Họ và Tên: ${emp.name}`, `Mã NV: ${emp.id}`, `Ngân hàng: ${emp.bank} (${emp.account})`]);
+      csvRows.push([`Ngày xuất file: ${formatDateTime(Date.now())}`]);
+      csvRows.push([]);
+      csvRows.push(['STT', 'Mã Chấm công', 'Giờ Check-in', 'Giờ Check-out', 'Số Giờ làm', 'Lương/Giờ (VNĐ)', 'Thành tiền (VNĐ)', 'Ghi chú']);
+
+      myAtt.forEach((a, idx) => {
+        csvRows.push([
+          idx + 1,
+          a.id,
+          formatDateTime(a.checkInTime),
+          formatDateTime(a.checkOutTime),
+          a.hours.toFixed(2),
+          Math.round(a.rate),
+          Math.round(a.hours * a.rate),
+          a.note
+        ]);
+      });
+
+      csvRows.push([]);
+      csvRows.push(['TỔNG CỘNG THÁNG', `${myAtt.length} ca`, '', '', totalHours.toFixed(2), '', Math.round(totalPay), '']);
+
+      downloadCSV(csvRows, `Cham_Cong_Ca_Nhan_${emp.name.replace(/\s+/g, '_')}_${monthVal}.csv`);
+    }
+
+    // Admin tải bảng tổng hợp toàn bộ hệ thống
     function exportMonthlySheet() {
-      const monthVal = document.getElementById('export-month-picker')?.value || '2026-10';
+      if (!isAdmin()) return exportPersonalMonthlySheet();
+
+      const monthVal = document.getElementById('export-month-picker')?.value || document.getElementById('staff-month-filter')?.value || '2026-10';
       const [yearFilter, monthFilter] = monthVal.split('-').map(Number);
 
       let csvRows = [];
-      csvRows.push([`BẢNG TỔNG HỢP LƯƠNG & CHẤM CÔNG CUỐI THÁNG (${monthVal})`]);
+      csvRows.push([`BẢNG TỔNG HỢP LƯƠNG & CHẤM CÔNG TOÀN HỆ THỐNG (${monthVal})`]);
       csvRows.push([`Ngày xuất báo cáo: ${formatDateTime(Date.now())}`]);
       csvRows.push([]);
       csvRows.push([
@@ -1256,6 +1717,7 @@
     }
 
     function exportAttendanceDetailSheet() {
+      if (!isAdmin()) return exportPersonalMonthlySheet();
       let csvRows = [
         ['Mã Chấm công', 'Mã NV', 'Họ và Tên', 'Thời gian Check-in', 'Thời gian Check-out', 'Tổng Giờ làm', 'Lương/giờ (VNĐ)', 'Thành tiền (VNĐ)', 'Ghi chú']
       ];
@@ -1291,21 +1753,130 @@
       URL.revokeObjectURL(url);
     }
 
-    /* ==================== RENDER GIAO DIỆN ==================== */
+    /* ==================== BACKUP GOOGLE DRIVE (CHỈ ADMIN) ==================== */
+    function exportBackupJSON() {
+      if (!isAdmin()) return;
+      const backupPayload = {
+        exportedAt: new Date().toISOString(),
+        system: 'iPOS HRM Cloud Pro RBAC',
+        data: state
+      };
+      const blob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const dateStr = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `iPOS_HRM_Backup_${dateStr}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importBackupJSON(input) {
+      if (!isAdmin()) return;
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          const restoredState = parsed.data || parsed;
+          if (!restoredState.employees || !restoredState.attendance) {
+            return alert('File JSON không đúng định dạng Backup của iPOS HRM!');
+          }
+          state = restoredState;
+          saveState();
+          renderAll();
+          alert('Đã khôi phục dữ liệu thành công!');
+        } catch (err) {
+          alert('Lỗi đọc file Backup: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function openDriveModal() {
+      if (!isAdmin()) return;
+      document.getElementById('drive-webhook-url').value = state.driveWebhookUrl || '';
+      document.getElementById('modal-drive-backup').classList.add('active');
+    }
+
+    async function uploadBackupToGoogleDrive() {
+      if (!isAdmin()) return;
+      const webhookUrl = document.getElementById('drive-webhook-url').value.trim();
+      state.driveWebhookUrl = webhookUrl;
+      saveState();
+
+      if (!webhookUrl) {
+        exportBackupJSON();
+        alert('Đã tải file Backup (.json) về máy!');
+        return;
+      }
+
+      try {
+        await fetch(webhookUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            exportedAt: new Date().toISOString(),
+            system: 'iPOS HRM Cloud Pro RBAC',
+            data: state
+          })
+        });
+        alert('Đã gửi bản sao lưu lên Google Drive thành công!');
+        closeModal('modal-drive-backup');
+      } catch (err) {
+        exportBackupJSON();
+      }
+    }
+
+    /* ==================== RENDER GIAO DIỆN THEO QUYỀN ==================== */
     function renderAll() {
-      const selects = ['att-emp-select', 'eval-emp-select'];
-      selects.forEach(selId => {
-        const el = document.getElementById(selId);
-        if (!el) return;
-        const currentVal = el.value;
-        el.innerHTML = state.employees.map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('');
-        if (currentVal && state.employees.some(e => e.id === currentVal)) el.value = currentVal;
+      if (!currentUser) return;
+
+      const monthVal = document.getElementById('staff-month-filter')?.value || '';
+      const [yearFilter, monthFilter] = monthVal ? monthVal.split('-').map(Number) : [null, null];
+
+      // 1. Cập nhật Select chọn nhân viên (Nếu là Nhân viên thì chỉ hiện đúng tên mình và khóa lại)
+      const attSelect = document.getElementById('att-emp-select');
+      if (isAdmin()) {
+        const currentVal = attSelect.value;
+        attSelect.innerHTML = state.employees.map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('');
+        if (currentVal && state.employees.some(e => e.id === currentVal)) attSelect.value = currentVal;
+        attSelect.disabled = false;
+      } else {
+        const myEmp = state.employees.find(e => e.id === currentUser.empId);
+        attSelect.innerHTML = myEmp
+          ? `<option value="${myEmp.id}">${myEmp.name} (${myEmp.id})</option>`
+          : `<option value="">${currentUser.fullName}</option>`;
+        attSelect.disabled = true;
+      }
+
+      const evalSelect = document.getElementById('eval-emp-select');
+      if (evalSelect) {
+        evalSelect.innerHTML = state.employees.map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('');
+      }
+
+      // 2. Lọc danh sách chấm công hiển thị theo quyền (Admin thấy tất cả, Nhân viên chỉ thấy của bản thân trong tháng)
+      const visibleAttendance = state.attendance.filter(row => {
+        const matchMonth = !yearFilter || (new Date(row.checkInTime).getFullYear() === yearFilter && (new Date(row.checkInTime).getMonth() + 1) === monthFilter);
+        if (isAdmin()) return matchMonth;
+        return row.empId === currentUser.empId && matchMonth;
       });
 
       const attBody = document.getElementById('attendance-table-body');
-      attBody.innerHTML = state.attendance.map(row => {
+      attBody.innerHTML = visibleAttendance.map(row => {
         const emp = state.employees.find(e => e.id === row.empId) || { name: 'Không xác định' };
         const totalMoney = row.hours * row.rate;
+        const actionTd = isAdmin() ? `
+          <td>
+            <div class="action-group">
+              <button class="btn btn-warning btn-sm" onclick="openEditAttendanceModal('${row.id}')">✎ Sửa</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteAttendance('${row.id}')">✕ Xóa</button>
+            </div>
+          </td>
+        ` : '';
+
         return `
           <tr>
             <td><strong>${emp.name}</strong><br><span style="color:var(--text-secondary);font-size:11px;">Mã: ${row.empId}</span></td>
@@ -1331,87 +1902,141 @@
             <td>${formatVND(row.rate)}/h</td>
             <td><strong style="color:var(--tech-mint);">${formatVND(totalMoney)}</strong></td>
             <td>${row.note}</td>
-            <td>
+            ${actionTd}
+          </tr>
+        `;
+      }).join('');
+
+      // 3. Cập nhật KPI và các bảng dành riêng cho Admin
+      if (isAdmin()) {
+        let systemTotalHours = 0;
+        let systemTotalPayroll = 0;
+
+        const empBody = document.getElementById('employee-table-body');
+        empBody.innerHTML = state.employees.map(emp => {
+          const empAtt = state.attendance.filter(a => a.empId === emp.id);
+          const totalHours = empAtt.reduce((sum, a) => sum + a.hours, 0);
+          const baseSalary = empAtt.reduce((sum, a) => sum + (a.hours * a.rate), 0);
+
+          const empEval = state.evaluations.filter(ev => ev.empId === emp.id);
+          const totalReward = empEval.filter(ev => ev.type === 'reward').reduce((s, ev) => s + ev.amount, 0);
+          const totalPenalty = empEval.filter(ev => ev.type === 'penalty').reduce((s, ev) => s + ev.amount, 0);
+
+          const netIncome = baseSalary + totalReward - totalPenalty;
+          systemTotalHours += totalHours;
+          systemTotalPayroll += netIncome;
+
+          return `
+            <tr>
+              <td><strong>${emp.name}</strong><br><span style="color:var(--text-secondary);font-size:11px;">Mã: ${emp.id}</span></td>
+              <td><strong>${emp.bank}</strong><br><span style="color:var(--text-secondary);font-size:12px;">STK: ${emp.account}</span></td>
+              <td>${formatVND(emp.rate)}/h<br><span style="color:var(--tech-blue);font-weight:600;">Đã làm: ${totalHours.toFixed(2)} giờ (${empAtt.length} ca)</span></td>
+              <td><strong>${formatVND(baseSalary)}</strong></td>
+              <td>
+                <span class="badge badge-reward">+${formatVND(totalReward)}</span>
+                <span class="badge badge-penalty">-${formatVND(totalPenalty)}</span>
+              </td>
+              <td><strong style="color:var(--tech-blue-dark); font-size:15px;">${formatVND(netIncome)}</strong></td>
+              <td>
+                <div class="action-group">
+                  <button class="btn btn-warning btn-sm" onclick="openEditEmployeeModal('${emp.id}')">✎ Chỉnh sửa</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteEmployee('${emp.id}')">✕ Xóa</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        document.getElementById('kpi-label-1').textContent = 'Tổng Nhân sự Hệ thống';
+        document.getElementById('kpi-staff-count').textContent = `${state.employees.length} Nhân viên`;
+        document.getElementById('kpi-label-2').textContent = 'Tổng Giờ công Hệ thống';
+        document.getElementById('kpi-total-hours').textContent = `${systemTotalHours.toFixed(2)} Giờ`;
+        document.getElementById('kpi-label-3').textContent = 'Quỹ Lương & Thưởng Tạm tính';
+        document.getElementById('kpi-total-payroll').textContent = formatVND(systemTotalPayroll);
+        document.getElementById('kpi-label-4').textContent = 'Tổng Lượt Chấm công';
+        document.getElementById('kpi-total-records').textContent = `${state.attendance.length} Lượt`;
+
+        // Render Bảng Thi đua
+        const evalBody = document.getElementById('eval-table-body');
+        evalBody.innerHTML = state.evaluations.map(ev => {
+          const emp = state.employees.find(e => e.id === ev.empId) || { name: 'Không xác định' };
+          const badgeHtml = ev.type === 'reward'
+            ? `<span class="badge badge-reward">Thưởng +${formatVND(ev.amount)}</span>`
+            : `<span class="badge badge-penalty">Phạt -${formatVND(ev.amount)}</span>`;
+          return `
+            <tr>
+              <td><strong>${emp.name}</strong></td>
+              <td>
+                <div class="thumb-box">
+                  <img src="${ev.photoThumb}" class="thumb-img" alt="Room">
+                  <span class="timestamp-tag">${formatDateTime(ev.photoTime)}</span>
+                </div>
+              </td>
+              <td><strong>${ev.progress}%</strong> hoàn thành</td>
+              <td>${ev.issues}</td>
+              <td>${badgeHtml}</td>
+              <td>
+                <button class="btn btn-danger btn-sm" onclick="deleteEvaluation('${ev.id}')">✕ Xóa</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        // Render Bảng Quản lý Tài khoản & Cấp quyền Admin
+        const accBody = document.getElementById('accounts-table-body');
+        accBody.innerHTML = state.users.map(u => {
+          const isRoot = u.username === 'admin1107';
+          const roleBadgeHtml = u.role === 'admin'
+            ? `<span class="badge badge-admin">QUẢN TRỊ VIÊN (ADMIN)</span>`
+            : `<span class="badge badge-staff">NHÂN VIÊN (STAFF)</span>`;
+
+          const actionButtons = isRoot
+            ? `<span style="font-size:12px; color:var(--text-secondary); font-weight:600;">Admin Gốc (Mặc định)</span>`
+            : `
               <div class="action-group">
-                <button class="btn btn-warning btn-sm" onclick="openEditAttendanceModal('${row.id}')">✎ Sửa</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteAttendance('${row.id}')">✕ Xóa</button>
+                <button class="btn ${u.role === 'admin' ? 'btn-warning' : 'btn-success'} btn-sm" onclick="toggleAccountRole('${u.username}')">
+                  ${u.role === 'admin' ? '⬇ Hạ về Nhân viên' : '⬆ Cấp quyền Admin'}
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="deleteUserAccount('${u.username}')">✕ Xóa TK</button>
               </div>
-            </td>
-          </tr>
-        `;
-      }).join('');
+            `;
 
-      let systemTotalHours = 0;
-      let systemTotalPayroll = 0;
+          return `
+            <tr>
+              <td><strong>${u.username}</strong></td>
+              <td><code>${u.password}</code></td>
+              <td><strong>${u.fullName}</strong></td>
+              <td>${u.empId || '<span style="color:var(--text-secondary);">Toàn hệ thống</span>'}</td>
+              <td>${roleBadgeHtml}</td>
+              <td>${actionButtons}</td>
+            </tr>
+          `;
+        }).join('');
 
-      const empBody = document.getElementById('employee-table-body');
-      empBody.innerHTML = state.employees.map(emp => {
-        const empAtt = state.attendance.filter(a => a.empId === emp.id);
-        const totalHours = empAtt.reduce((sum, a) => sum + a.hours, 0);
-        const baseSalary = empAtt.reduce((sum, a) => sum + (a.hours * a.rate), 0);
+      } else {
+        // KPI dành riêng cho Nhân viên đang đăng nhập (Chỉ thấy số liệu của bản thân trong tháng)
+        const myHours = visibleAttendance.reduce((s, a) => s + a.hours, 0);
+        const myPay = visibleAttendance.reduce((s, a) => s + (a.hours * a.rate), 0);
 
-        const empEval = state.evaluations.filter(ev => ev.empId === emp.id);
-        const totalReward = empEval.filter(ev => ev.type === 'reward').reduce((s, ev) => s + ev.amount, 0);
-        const totalPenalty = empEval.filter(ev => ev.type === 'penalty').reduce((s, ev) => s + ev.amount, 0);
-
-        const netIncome = baseSalary + totalReward - totalPenalty;
-        systemTotalHours += totalHours;
-        systemTotalPayroll += netIncome;
-
-        return `
-          <tr>
-            <td><strong>${emp.name}</strong><br><span style="color:var(--text-secondary);font-size:11px;">Mã: ${emp.id}</span></td>
-            <td><strong>${emp.bank}</strong><br><span style="color:var(--text-secondary);font-size:12px;">STK: ${emp.account}</span></td>
-            <td>${formatVND(emp.rate)}/h<br><span style="color:var(--tech-blue);font-weight:600;">Đã làm: ${totalHours.toFixed(2)} giờ (${empAtt.length} ca)</span></td>
-            <td><strong>${formatVND(baseSalary)}</strong></td>
-            <td>
-              <span class="badge badge-reward">+${formatVND(totalReward)}</span>
-              <span class="badge badge-penalty">-${formatVND(totalPenalty)}</span>
-            </td>
-            <td><strong style="color:var(--tech-blue-dark); font-size:15px;">${formatVND(netIncome)}</strong></td>
-            <td>
-              <div class="action-group">
-                <button class="btn btn-warning btn-sm" onclick="openEditEmployeeModal('${emp.id}')">✎ Chỉnh sửa</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteEmployee('${emp.id}')">✕ Xóa</button>
-              </div>
-            </td>
-          </tr>
-        `;
-      }).join('');
-
-      document.getElementById('kpi-staff-count').textContent = `${state.employees.length} Nhân viên`;
-      document.getElementById('kpi-total-hours').textContent = `${systemTotalHours.toFixed(2)} Giờ`;
-      document.getElementById('kpi-total-payroll').textContent = formatVND(systemTotalPayroll);
-      document.getElementById('kpi-total-records').textContent = `${state.attendance.length} Lượt`;
-
-      const evalBody = document.getElementById('eval-table-body');
-      evalBody.innerHTML = state.evaluations.map(ev => {
-        const emp = state.employees.find(e => e.id === ev.empId) || { name: 'Không xác định' };
-        const badgeHtml = ev.type === 'reward'
-          ? `<span class="badge badge-reward">Thưởng +${formatVND(ev.amount)}</span>`
-          : `<span class="badge badge-penalty">Phạt -${formatVND(ev.amount)}</span>`;
-        return `
-          <tr>
-            <td><strong>${emp.name}</strong></td>
-            <td>
-              <div class="thumb-box">
-                <img src="${ev.photoThumb}" class="thumb-img" alt="Room">
-                <span class="timestamp-tag">${formatDateTime(ev.photoTime)}</span>
-              </div>
-            </td>
-            <td><strong>${ev.progress}%</strong> hoàn thành</td>
-            <td>${ev.issues}</td>
-            <td>${badgeHtml}</td>
-            <td>
-              <button class="btn btn-danger btn-sm" onclick="deleteEvaluation('${ev.id}')">✕ Xóa</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
+        document.getElementById('kpi-label-1').textContent = 'Nhân viên Ghi danh';
+        document.getElementById('kpi-staff-count').textContent = currentUser.fullName;
+        document.getElementById('kpi-label-2').textContent = 'Giờ công Tháng này của bạn';
+        document.getElementById('kpi-total-hours').textContent = `${myHours.toFixed(2)} Giờ`;
+        document.getElementById('kpi-label-3').textContent = 'Lương Tạm tính của bạn';
+        document.getElementById('kpi-total-payroll').textContent = formatVND(myPay);
+        document.getElementById('kpi-label-4').textContent = 'Số Ca đã Chấm công';
+        document.getElementById('kpi-total-records').textContent = `${visibleAttendance.length} Ca`;
+      }
     }
 
     window.onload = () => {
-      renderAll();
+      try {
+        const savedSession = sessionStorage.getItem(SESSION_KEY);
+        if (savedSession) {
+          currentUser = JSON.parse(savedSession);
+        }
+      } catch (e) {}
+      applyRolePermissions();
     };
   </script>
 </body>
