@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>iPOS HRM Cloud - Hệ thống Chấm công Đồng bộ Thời gian thực</title>
+  <title>Quản lý Nhân Sự EdTech Centre</title>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
   <style>
@@ -60,7 +60,7 @@
       box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
     }
     .auth-logo { text-align: center; margin-bottom: 20px; }
-    .auth-logo h1 { font-size: 22px; color: var(--tech-blue-dark); letter-spacing: 0.5px; }
+    .auth-logo h1 { font-size: 21px; color: var(--tech-blue-dark); letter-spacing: 0.3px; }
     .auth-logo p { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
     .auth-tabs {
       display: grid;
@@ -284,29 +284,37 @@
     .badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-block; margin: 2px; }
     .badge-reward { background: #E6F4EA; color: #137333; }
     .badge-penalty { background: #FCE8E6; color: #C5221F; }
+    .badge-pending { background: #FEF7E0; color: #B06000; }
     .badge-admin { background: #FCE8E6; color: #C5221F; }
     .badge-staff { background: #E8F0FE; color: #174EA6; }
 
+    /* Modal Popup */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(17, 24, 39, 0.55);
+      background: rgba(15, 23, 42, 0.68);
       display: none;
       justify-content: center;
       align-items: center;
-      z-index: 1000;
+      z-index: 2000;
       padding: 16px;
+      backdrop-filter: blur(3px);
     }
     .modal-overlay.active { display: flex; }
     .modal-box {
       background: var(--bg-card);
-      border-radius: 12px;
+      border-radius: 14px;
       width: 100%;
-      max-width: 580px;
-      padding: 24px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-      max-height: 90vh;
+      max-width: 600px;
+      padding: 26px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+      max-height: 92vh;
       overflow-y: auto;
+      animation: modalFadeIn 0.25s ease-out;
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: translateY(-12px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
     .modal-header {
       display: flex;
@@ -316,8 +324,8 @@
       margin-bottom: 16px;
       border-bottom: 1px solid var(--border-color);
     }
-    .modal-header h3 { font-size: 16px; color: var(--tech-blue-dark); }
-    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-secondary); }
+    .modal-header h3 { font-size: 17px; color: var(--tech-blue-dark); display: flex; align-items: center; gap: 8px; }
+    .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-secondary); }
     .modal-footer {
       display: flex;
       justify-content: flex-end;
@@ -326,9 +334,76 @@
       padding-top: 14px;
       border-top: 1px solid var(--border-color);
     }
+
+    /* Giao diện riêng cho Thông báo Quy trình đầu trang */
+    .notice-content {
+      font-size: 14px;
+      line-height: 1.65;
+      color: #1E293B;
+    }
+    .notice-lead {
+      background: #E8F0FE;
+      border-left: 4px solid var(--tech-blue);
+      padding: 12px 14px;
+      border-radius: 6px;
+      font-weight: 600;
+      color: var(--tech-blue-dark);
+      margin-bottom: 14px;
+    }
+    .notice-step {
+      background: #F8FAFC;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+    .notice-step strong {
+      color: var(--tech-blue-dark);
+    }
+    .notice-contact {
+      margin-top: 14px;
+      padding: 12px 14px;
+      background: #FEF7E0;
+      border: 1px dashed #F59E0B;
+      border-radius: 8px;
+      font-weight: 700;
+      color: #92400E;
+      text-align: center;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
+
+  <!-- ==================== MODAL THÔNG BÁO TỰ ĐỘNG HIỂN THỊ KHI VÀO TRANG ==================== -->
+  <div class="modal-overlay active" id="modal-announcement">
+    <div class="modal-box" style="max-width: 640px;">
+      <div class="modal-header">
+        <h3>📢 THÔNG BÁO - QUẢN LÝ NHÂN SỰ EDTECH CENTRE</h3>
+        <button class="modal-close" onclick="closeModal('modal-announcement')" title="Đóng">&times;</button>
+      </div>
+      <div class="notice-content">
+        <div class="notice-lead">
+          Kể từ ngày <strong>1/11/2026</strong>, việc Chấm công làm việc của các bạn sẽ được thực hiện bán tự động trên nền tảng <span style="text-decoration: underline;">HRM</span> của Edtech. Quy trình sẽ diễn ra như sau:
+        </div>
+        <div class="notice-step">
+          <strong>Bước 1:</strong> Khi đến văn phòng, các bạn sẽ kết nối vào mạng wifi <strong>Edtech Guess</strong> có IP: <code>( )</code> và chụp 1 bức ảnh Check-in bằng chức năng Gallery của thư viện và upload lên nền tảng.
+        </div>
+        <div class="notice-step">
+          <strong>Bước 2:</strong> Trong quá trình làm việc sẽ có camera nhận diện đi cùng với việc nhận diện vị trí thông qua IP wifi <strong>Edtech Guest</strong> sẽ đánh giá thái độ và tinh thần làm việc của các bạn để hệ thống tiến hành đánh giá vào cuối tháng.
+        </div>
+        <div class="notice-step">
+          <strong>Bước 3:</strong> Khi ra về, các bạn cũng sẽ chụp một bức ảnh Check-out upload lên thư mục làm việc của các bạn để kết thúc ca làm (đồng thời gửi Báo cáo cuối buổi).
+        </div>
+        <div class="notice-contact">
+          📞 Mọi thắc mắc vui lòng liên hệ: <a href="tel:0936089738" style="color:#B45309; text-decoration:underline;">0936089738</a> ( Sơn )
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" style="width: 100%; padding: 12px; font-size: 14px;" onclick="closeModal('modal-announcement')">✓ Đã hiểu — Đóng để tiếp tục</button>
+      </div>
+    </div>
+  </div>
 
   <!-- THANH TRẠNG THÁI ĐỒNG BỘ ĐÁM MÂY -->
   <div class="sync-bar">
@@ -336,7 +411,8 @@
       <span class="sync-dot" id="sync-dot"></span>
       <span id="sync-status-text">Đang kết nối máy chủ Google Drive Cloud...</span>
     </div>
-    <div style="display:flex; gap:10px; align-items:center;">
+    <div style="display:flex; gap:8px; align-items:center;">
+      <button class="btn btn-outline" style="padding:3px 10px; font-size:11px;" onclick="openAnnouncementModal()">🔔 Xem lại Thông báo Quy trình</button>
       <button class="btn btn-outline" style="padding:3px 10px; font-size:11px;" onclick="pullFromCloud(true)">🔄 Tải dữ liệu mới nhất</button>
     </div>
   </div>
@@ -345,7 +421,7 @@
   <div id="auth-screen" class="auth-wrapper">
     <div class="auth-card">
       <div class="auth-logo">
-        <h1>iPOS HRM CLOUD</h1>
+        <h1>Quản lý Nhân Sự EdTech  Centre</h1>
         <p>Hệ thống Chấm công AI OCR & Đồng bộ Thời gian thực</p>
       </div>
 
@@ -396,7 +472,7 @@
   <div id="app-screen" class="hidden">
     <header class="app-header">
       <div class="brand-title">
-        <span>iPOS HRM CLOUD</span>
+        <span>Quản lý Nhân Sự EdTech  Centre</span>
         <span class="brand-badge">CLOUD SYNC</span>
         <span id="current-role-badge" class="role-badge-admin">ADMIN</span>
       </div>
@@ -404,6 +480,7 @@
         <div class="user-welcome">
           <span>👤 Xin chào, <strong id="current-user-display">Admin</strong></span>
         </div>
+        <button class="btn btn-outline" onclick="openAnnouncementModal()">🔔 Quy trình</button>
         <button class="btn btn-outline admin-only" onclick="openDriveModal()">☁ Cấu hình Cloud Sync</button>
         <button class="btn btn-success" id="header-export-btn" style="padding:8px 14px; font-size:12px;" onclick="handleExportSheetAction()">📊 Xuất Sheet Tổng hợp Cuối tháng</button>
         <button class="btn btn-danger" style="padding:8px 12px; font-size:12px;" onclick="handleLogout()">Đăng xuất</button>
@@ -429,10 +506,11 @@
       </div>
     </section>
 
+    <!-- Thanh Điều hướng: Nhân viên được quyền truy cập Tab 1 (Chấm công) và Tab 3 (Báo cáo Cuối buổi) -->
     <nav class="nav-tabs" id="main-nav-tabs">
       <button class="tab-btn active" onclick="switchTab('tab-attendance', this)">1. Chấm công Ảnh Gallery & Bảng Chấm công</button>
       <button class="tab-btn admin-only" onclick="switchTab('tab-employees', this)">2. Quản lý Nhân sự, Ngân hàng & Thu nhập</button>
-      <button class="tab-btn admin-only" onclick="switchTab('tab-gamification', this)">3. Thi đua Thưởng/Phạt & Báo cáo Cuối ngày</button>
+      <button class="tab-btn" id="nav-btn-gamification" onclick="switchTab('tab-gamification', this)">3. Báo cáo Cuối buổi & Thi đua Thưởng/Phạt</button>
       <button class="tab-btn admin-only" onclick="switchTab('tab-accounts', this)">4. Quản lý Tài khoản & Cấp quyền Admin</button>
       <button class="tab-btn admin-only" onclick="switchTab('tab-backup', this)">5. Cấu hình Đồng bộ Cloud & Xuất Sheet</button>
     </nav>
@@ -536,7 +614,7 @@
         </div>
       </section>
 
-      <!-- TAB 2: QUẢN LÝ NHÂN SỰ (ADMIN) -->
+      <!-- TAB 2: QUẢN LÝ NHÂN SỰ (CHỈ ADMIN) -->
       <section id="tab-employees" class="tab-panel admin-only">
         <div class="card">
           <div class="card-title">
@@ -562,45 +640,52 @@
         </div>
       </section>
 
-      <!-- TAB 3: THI ĐUA (ADMIN) -->
-      <section id="tab-gamification" class="tab-panel admin-only">
+      <!-- TAB 3: BÁO CÁO CUỐI BUỔI & THI ĐUA (MỞ CHO CẢ NHÂN VIÊN & ADMIN) -->
+      <section id="tab-gamification" class="tab-panel">
         <div class="card">
-          <div class="card-title">Báo cáo Hình ảnh Toàn phòng Cuối giờ làm & Chấm điểm Thi đua Khen thưởng / Phạt</div>
+          <div class="card-title">
+            <span id="eval-card-title">Báo cáo Hình ảnh Toàn phòng Cuối buổi & Chấm điểm Thi đua</span>
+            <span style="font-size:12px; color:var(--tech-mint); font-weight:600;">✓ Bắt buộc chụp ảnh toàn phòng khi kết thúc ca làm</span>
+          </div>
           <div class="form-grid">
             <div class="form-group">
-              <label>Nhân viên Báo cáo Cuối ca</label>
+              <label>Nhân viên Báo cáo Cuối buổi</label>
               <select id="eval-emp-select"></select>
             </div>
             <div class="form-group">
-              <label>Ảnh chụp Toàn phòng Cuối giờ (Gallery)</label>
+              <label>Ảnh chụp Toàn phòng Cuối buổi (Gallery)</label>
               <input type="file" id="eval-room-photo" accept="image/*" onchange="analyzeUploadedImage(this, 'room-meta-preview', null)">
-              <small id="room-meta-preview" class="ocr-status"></small>
+              <small id="room-meta-preview" class="ocr-status">Chưa chọn ảnh</small>
             </div>
             <div class="form-group">
               <label>Tiến độ Công việc trong ngày (%)</label>
               <input type="number" id="eval-progress" value="100" min="0" max="100">
             </div>
             <div class="form-group">
-              <label>Vấn đề phát sinh trong ngày</label>
-              <input type="text" id="eval-issues" placeholder="VD: Phòng sạch sẽ, đã tắt thiết bị">
+              <label>Báo cáo Công việc & Vấn đề phát sinh</label>
+              <input type="text" id="eval-issues" placeholder="VD: Đã tắt thiết bị, khóa cửa, hoàn thành nhiệm vụ">
             </div>
-            <div class="form-group">
-              <label>Loại Thi đua</label>
+            <div class="form-group admin-only" id="eval-type-group">
+              <label>Loại Thi đua (Quyền Admin)</label>
               <select id="eval-type">
+                <option value="pending">Chờ đánh giá (0 VNĐ)</option>
                 <option value="reward">Khen thưởng (+ VNĐ)</option>
                 <option value="penalty">Xử phạt (- VNĐ)</option>
               </select>
             </div>
-            <div class="form-group">
+            <div class="form-group admin-only" id="eval-amount-group">
               <label>Số tiền Thưởng / Phạt (VNĐ)</label>
               <input type="number" id="eval-amount" value="50000" step="10000">
             </div>
-            <button class="btn" onclick="submitEndShiftReport()">Lưu Báo cáo & Cập nhật Lương</button>
+            <button class="btn" id="btn-submit-eval" onclick="submitEndShiftReport()">+ Gửi Báo cáo Cuối buổi</button>
           </div>
         </div>
 
         <div class="card">
-          <div class="card-title">Nhật ký Ảnh Toàn phòng Cuối ca, Tiến độ & Quyết định Thưởng / Phạt</div>
+          <div class="card-title">
+            <span id="eval-table-title">Nhật ký Báo cáo Cuối buổi, Ảnh Toàn phòng & Quyết định Thưởng / Phạt</span>
+            <button class="btn btn-outline" style="color:var(--tech-blue); border-color:var(--tech-blue); padding:6px 10px;" onclick="pullFromCloud(true)">🔄 Làm mới</button>
+          </div>
           <div class="table-responsive">
             <table>
               <thead>
@@ -608,9 +693,9 @@
                   <th>Nhân viên</th>
                   <th>Ảnh Toàn phòng & Giờ chụp</th>
                   <th>Tiến độ Công việc</th>
-                  <th>Các vấn đề trong ngày</th>
-                  <th>Thưởng / Phạt Thi đua</th>
-                  <th>Thao tác</th>
+                  <th>Báo cáo & Vấn đề trong ngày</th>
+                  <th>Đánh giá Thưởng / Phạt</th>
+                  <th class="admin-only">Thao tác (Admin)</th>
                 </tr>
               </thead>
               <tbody id="eval-table-body"></tbody>
@@ -645,7 +730,7 @@
             <div class="form-group">
               <label>Phân quyền Hệ thống</label>
               <select id="acc-new-role">
-                <option value="staff">Nhân viên (Chỉ chấm công cá nhân)</option>
+                <option value="staff">Nhân viên (Chấm công & Báo cáo cuối buổi)</option>
                 <option value="admin">Quản trị viên (Toàn quyền Admin)</option>
               </select>
             </div>
@@ -681,7 +766,7 @@
         <div class="card">
           <div class="card-title">1. Cấu hình Đồng bộ Đám mây Thời gian thực (Google Drive Cloud Sync)</div>
           <p style="font-size:13px; color:var(--text-secondary); margin-bottom:14px;">
-            Hệ thống đã được gắn sẵn đường dẫn <strong>Google Apps Script Web App URL</strong> của bạn để tự động đồng bộ mọi thao tác chấm công của nhân viên về Google Drive.
+            Hệ thống đã được gắn sẵn đường dẫn <strong>Google Apps Script Web App URL</strong> của bạn để tự động đồng bộ mọi thao tác chấm công và báo cáo cuối buổi của nhân viên về Google Drive.
           </p>
           <div class="form-grid">
             <div class="form-group" style="grid-column: span 2;">
@@ -697,7 +782,7 @@
           <div class="form-grid" style="max-width: 750px;">
             <div class="form-group">
               <label>Chọn Tháng/Năm Xuất Báo cáo</label>
-              <input type="month" id="export-month-picker" value="2026-10">
+              <input type="month" id="export-month-picker" value="2026-11">
             </div>
             <button class="btn btn-success" onclick="exportMonthlySheet()">📊 Tải File Sheet Tổng hợp Toàn bộ (.CSV)</button>
             <button class="btn btn-secondary" onclick="exportAttendanceDetailSheet()">📋 Xuất Riêng Bảng Chấm công Chi tiết (.CSV)</button>
@@ -828,14 +913,51 @@
     </div>
   </div>
 
+  <!-- MODAL 4: CHẤM ĐIỂM THƯỞNG / PHẠT CHO BÁO CÁO CUỐI BUỔI (DÀNH CHO ADMIN) -->
+  <div class="modal-overlay" id="modal-grade-eval">
+    <div class="modal-box" style="max-width: 460px;">
+      <div class="modal-header">
+        <h3>⚖ Chấm Thưởng / Phạt Báo cáo Cuối buổi</h3>
+        <button class="modal-close" onclick="closeModal('modal-grade-eval')">&times;</button>
+      </div>
+      <input type="hidden" id="grade-eval-id">
+      <div class="form-grid" style="grid-template-columns: 1fr;">
+        <div class="form-group">
+          <label>Tiến độ hoàn thành (%)</label>
+          <input type="number" id="grade-eval-progress" min="0" max="100">
+        </div>
+        <div class="form-group">
+          <label>Ghi chú / Nhận xét của Quản lý</label>
+          <input type="text" id="grade-eval-issues">
+        </div>
+        <div class="form-group">
+          <label>Quyết định Thi đua</label>
+          <select id="grade-eval-type">
+            <option value="pending">Chờ duyệt / Không thưởng phạt (0 VNĐ)</option>
+            <option value="reward">Khen thưởng (+ VNĐ)</option>
+            <option value="penalty">Xử phạt (- VNĐ)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Số tiền Thưởng / Phạt (VNĐ)</label>
+          <input type="number" id="grade-eval-amount" step="10000" value="50000">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" onclick="closeModal('modal-grade-eval')">Hủy</button>
+        <button class="btn btn-success" onclick="saveGradedEvaluation()">Lưu Quyết định</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // =========================================================================
     // ĐÃ GẮN SẴN LINK GOOGLE APPS SCRIPT WEB APP CỦA BẠN:
     // =========================================================================
     const CLOUD_SYNC_URL = 'https://script.google.com/macros/s/AKfycbxURxh5Afu5EA_oeHncSWP8Ofw9MyNIvPOt0q-iudl71Ijr2xMHPHFPAmE5fszjtahE2A/exec';
 
-    const STORAGE_KEY = 'IPOS_HRM_RBAC_V5';
-    const SESSION_KEY = 'IPOS_HRM_CURRENT_USER_V5';
+    const STORAGE_KEY = 'EDTECH_CENTRE_HRM_V7';
+    const SESSION_KEY = 'EDTECH_CENTRE_CURRENT_USER_V7';
 
     const defaultState = {
       users: [
@@ -878,6 +1000,10 @@
     let state = loadState();
     let currentUser = null;
     let isSyncing = false;
+
+    function openAnnouncementModal() {
+      document.getElementById('modal-announcement').classList.add('active');
+    }
 
     function getActiveCloudUrl() {
       return (CLOUD_SYNC_URL && CLOUD_SYNC_URL.trim()) || (state.driveWebhookUrl && state.driveWebhookUrl.trim()) || '';
@@ -986,7 +1112,7 @@
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
             updatedAt: new Date().toISOString(),
-            system: 'iPOS HRM Cloud Sync V5',
+            system: 'Quản lý Nhân Sự EdTech Centre',
             data: state
           })
         });
@@ -1153,6 +1279,7 @@
       const manualInInput = document.getElementById('att-manual-in');
       const manualOutInput = document.getElementById('att-manual-out');
       const empSelect = document.getElementById('att-emp-select');
+      const evalSelect = document.getElementById('eval-emp-select');
 
       if (isAdmin()) {
         roleBadge.textContent = 'QUYỀN ADMIN TOÀN HỆ THỐNG';
@@ -1162,23 +1289,31 @@
         manualInInput.removeAttribute('readonly');
         manualOutInput.removeAttribute('readonly');
         empSelect.removeAttribute('disabled');
+        if (evalSelect) evalSelect.removeAttribute('disabled');
+
         document.getElementById('label-manual-in').textContent = 'Giờ Check-in (Tự điền từ ảnh / Có thể sửa)';
         document.getElementById('label-manual-out').textContent = 'Giờ Check-out (Tự điền từ ảnh / Có thể sửa)';
         document.getElementById('header-export-btn').textContent = '📊 Xuất Sheet Tổng hợp Toàn Hệ thống (.CSV)';
         document.getElementById('table-export-btn').textContent = '📊 Xuất Sheet Tổng hợp (.CSV)';
         document.getElementById('att-table-title').textContent = 'Bảng Thống kê Chấm công Toàn Hệ thống (Cho phép Sửa, Cập nhật & Xóa)';
+        document.getElementById('nav-btn-gamification').textContent = '3. Báo cáo Cuối buổi & Thi đua Thưởng/Phạt';
+        document.getElementById('btn-submit-eval').textContent = 'Lưu Báo cáo & Cập nhật Lương';
       } else {
-        roleBadge.textContent = 'NHÂN VIÊN (CHẤM CÔNG CÁ NHÂN)';
+        roleBadge.textContent = 'NHÂN VIÊN (CHẤM CÔNG & BÁO CÁO)';
         roleBadge.className = 'role-badge-staff';
         adminElements.forEach(el => el.classList.add('hidden'));
 
         manualInInput.setAttribute('readonly', 'true');
         manualOutInput.setAttribute('readonly', 'true');
+        if (evalSelect) evalSelect.setAttribute('disabled', 'true');
+
         document.getElementById('label-manual-in').textContent = 'Giờ Check-in (Chỉ đọc từ ảnh Gallery)';
         document.getElementById('label-manual-out').textContent = 'Giờ Check-out (Chỉ đọc từ ảnh Gallery)';
         document.getElementById('header-export-btn').textContent = '📊 Tải Bảng Chấm công Cá nhân Cuối tháng (.CSV)';
         document.getElementById('table-export-btn').textContent = '📊 Tải Bảng Chấm công Cá nhân (.CSV)';
         document.getElementById('att-table-title').textContent = `Bảng Chấm công Cá nhân trong Tháng của ${currentUser.fullName}`;
+        document.getElementById('nav-btn-gamification').textContent = '2. Báo cáo Cuối buổi (Tải ảnh phòng)';
+        document.getElementById('btn-submit-eval').textContent = '+ Gửi Báo cáo Cuối buổi';
 
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1419,8 +1554,8 @@
     }
 
     function switchTab(tabId, btn) {
-      if (!isAdmin() && tabId !== 'tab-attendance') {
-        return alert('Tài khoản Nhân viên chỉ có quyền truy cập mục Chấm công Cá nhân!');
+      if (!isAdmin() && tabId !== 'tab-attendance' && tabId !== 'tab-gamification') {
+        return alert('Tài khoản Nhân viên chỉ có quyền truy cập mục Chấm công và Báo cáo Cuối buổi!');
       }
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1652,16 +1787,21 @@
       renderAll();
     }
 
-    /* ==================== 3. THI ĐUA THƯỞNG / PHẠT ==================== */
+    /* ==================== 3. BÁO CÁO CUỐI BUỔI & THI ĐUA ==================== */
     async function submitEndShiftReport() {
-      if (!isAdmin()) return;
       await pullFromCloud(false);
-      const empId = document.getElementById('eval-emp-select').value;
+
+      const empId = isAdmin() ? document.getElementById('eval-emp-select').value : currentUser.empId;
       const file = document.getElementById('eval-room-photo').files[0];
       const progress = parseInt(document.getElementById('eval-progress').value) || 100;
-      const issues = document.getElementById('eval-issues').value.trim() || 'Không có vấn đề phát sinh';
-      const type = document.getElementById('eval-type').value;
-      const amount = parseFloat(document.getElementById('eval-amount').value) || 0;
+      const issues = document.getElementById('eval-issues').value.trim() || 'Đã hoàn thành công việc cuối buổi, không có vấn đề phát sinh';
+
+      if (!isAdmin() && !file) {
+        return alert('Vui lòng tải lên Ảnh chụp Toàn phòng cuối buổi từ Gallery để gửi báo cáo!');
+      }
+
+      const type = isAdmin() ? document.getElementById('eval-type').value : 'pending';
+      const amount = (isAdmin() && type !== 'pending') ? (parseFloat(document.getElementById('eval-amount').value) || 0) : 0;
 
       const photoTime = file ? file.lastModified : Date.now();
       const defaultRoomSvg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><rect width="50" height="50" fill="%2381C995"/><text x="50%" y="55%" fill="white" font-size="9" text-anchor="middle">ROOM</text></svg>';
@@ -1678,15 +1818,45 @@
         amount
       });
       document.getElementById('eval-room-photo').value = '';
-      document.getElementById('room-meta-preview').textContent = '';
+      document.getElementById('room-meta-preview').textContent = 'Chưa chọn ảnh';
       document.getElementById('eval-issues').value = '';
       await saveState(true);
+      renderAll();
+      alert('Đã gửi Báo cáo Cuối buổi thành công và đồng bộ lên hệ thống!');
+    }
+
+    function openGradeEvaluationModal(evId) {
+      if (!isAdmin()) return;
+      const ev = state.evaluations.find(item => item.id === evId);
+      if (!ev) return;
+
+      document.getElementById('grade-eval-id').value = ev.id;
+      document.getElementById('grade-eval-progress').value = ev.progress;
+      document.getElementById('grade-eval-issues').value = ev.issues;
+      document.getElementById('grade-eval-type').value = ev.type || 'pending';
+      document.getElementById('grade-eval-amount').value = ev.amount || 50000;
+      document.getElementById('modal-grade-eval').classList.add('active');
+    }
+
+    async function saveGradedEvaluation() {
+      if (!isAdmin()) return;
+      const evId = document.getElementById('grade-eval-id').value;
+      const ev = state.evaluations.find(item => item.id === evId);
+      if (!ev) return;
+
+      ev.progress = parseInt(document.getElementById('grade-eval-progress').value) || 100;
+      ev.issues = document.getElementById('grade-eval-issues').value.trim();
+      ev.type = document.getElementById('grade-eval-type').value;
+      ev.amount = ev.type === 'pending' ? 0 : (parseFloat(document.getElementById('grade-eval-amount').value) || 0);
+
+      await saveState(true);
+      closeModal('modal-grade-eval');
       renderAll();
     }
 
     async function deleteEvaluation(evId) {
       if (!isAdmin()) return;
-      if (!confirm('Xóa bản ghi thưởng/phạt này?')) return;
+      if (!confirm('Xóa bản ghi báo cáo cuối buổi này?')) return;
       state.evaluations = state.evaluations.filter(ev => ev.id !== evId);
       await saveState(true);
       renderAll();
@@ -1708,7 +1878,7 @@
       const emp = state.employees.find(e => e.id === currentUser.empId);
       if (!emp) return;
 
-      const monthVal = document.getElementById('staff-month-filter')?.value || '2026-10';
+      const monthVal = document.getElementById('staff-month-filter')?.value || '2026-11';
       const [yearFilter, monthFilter] = monthVal.split('-').map(Number);
 
       const myAtt = state.attendance.filter(a => {
@@ -1720,7 +1890,7 @@
       const totalPay = myAtt.reduce((s, a) => s + (a.hours * a.rate), 0);
 
       let csvRows = [];
-      csvRows.push([`BẢNG CHẤM CÔNG CÁ NHÂN CUỐI THÁNG (${monthVal})`]);
+      csvRows.push([`QUẢN LÝ NHÂN SỰ EDTECH CENTRE - BẢNG CHẤM CÔNG CÁ NHÂN (${monthVal})`]);
       csvRows.push([`Họ và Tên: ${emp.name}`, `Mã NV: ${emp.id}`, `Ngân hàng: ${emp.bank} (${emp.account})`]);
       csvRows.push([`Ngày xuất file: ${formatDateTime(Date.now())}`]);
       csvRows.push([]);
@@ -1742,17 +1912,17 @@
       csvRows.push([]);
       csvRows.push(['TỔNG CỘNG THÁNG', `${myAtt.length} ca`, '', '', totalHours.toFixed(2), '', Math.round(totalPay), '']);
 
-      downloadCSV(csvRows, `Cham_Cong_Ca_Nhan_${emp.name.replace(/\s+/g, '_')}_${monthVal}.csv`);
+      downloadCSV(csvRows, `EdTech_Centre_Cham_Cong_${emp.name.replace(/\s+/g, '_')}_${monthVal}.csv`);
     }
 
     function exportMonthlySheet() {
       if (!isAdmin()) return exportPersonalMonthlySheet();
 
-      const monthVal = document.getElementById('export-month-picker')?.value || document.getElementById('staff-month-filter')?.value || '2026-10';
+      const monthVal = document.getElementById('export-month-picker')?.value || document.getElementById('staff-month-filter')?.value || '2026-11';
       const [yearFilter, monthFilter] = monthVal.split('-').map(Number);
 
       let csvRows = [];
-      csvRows.push([`BẢNG TỔNG HỢP LƯƠNG & CHẤM CÔNG TOÀN HỆ THỐNG (${monthVal})`]);
+      csvRows.push([`QUẢN LÝ NHÂN SỰ EDTECH CENTRE - BẢNG TỔNG HỢP LƯƠNG & CHẤM CÔNG (${monthVal})`]);
       csvRows.push([`Ngày xuất báo cáo: ${formatDateTime(Date.now())}`]);
       csvRows.push([]);
       csvRows.push([
@@ -1827,7 +1997,7 @@
         ]);
       });
 
-      downloadCSV(csvRows, `Bang_Tong_Hop_Luong_Thang_${monthVal}.csv`);
+      downloadCSV(csvRows, `EdTech_Centre_Bang_Luong_Thang_${monthVal}.csv`);
     }
 
     function exportAttendanceDetailSheet() {
@@ -1849,7 +2019,7 @@
           a.note
         ]);
       });
-      downloadCSV(csvRows, `Chi_Tiet_Cham_Cong_${new Date().toISOString().slice(0, 10)}.csv`);
+      downloadCSV(csvRows, `EdTech_Centre_Chi_Tiet_Cham_Cong_${new Date().toISOString().slice(0, 10)}.csv`);
     }
 
     function downloadCSV(rows, filename) {
@@ -1872,7 +2042,7 @@
       if (!isAdmin()) return;
       const backupPayload = {
         exportedAt: new Date().toISOString(),
-        system: 'iPOS HRM Cloud Sync V5',
+        system: 'Quản lý Nhân Sự EdTech Centre',
         data: state
       };
       const blob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: 'application/json' });
@@ -1880,7 +2050,7 @@
       const a = document.createElement('a');
       const dateStr = new Date().toISOString().slice(0, 10);
       a.href = url;
-      a.download = `iPOS_HRM_Backup_${dateStr}.json`;
+      a.download = `EdTech_Centre_HRM_Backup_${dateStr}.json`;
       a.click();
       URL.revokeObjectURL(url);
     }
@@ -1895,7 +2065,7 @@
           const parsed = JSON.parse(e.target.result);
           const restoredState = parsed.data || parsed;
           if (!restoredState.employees || !restoredState.attendance) {
-            return alert('File JSON không đúng định dạng Backup của iPOS HRM!');
+            return alert('File JSON không đúng định dạng Backup của hệ thống!');
           }
           state = restoredState;
           ensureRootAdmin(state);
@@ -1943,22 +2113,32 @@
       const [yearFilter, monthFilter] = monthVal ? monthVal.split('-').map(Number) : [null, null];
 
       const attSelect = document.getElementById('att-emp-select');
+      const evalSelect = document.getElementById('eval-emp-select');
+
       if (isAdmin()) {
-        const currentVal = attSelect.value;
+        const currentAttVal = attSelect.value;
         attSelect.innerHTML = state.employees.map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('');
-        if (currentVal && state.employees.some(e => e.id === currentVal)) attSelect.value = currentVal;
+        if (currentAttVal && state.employees.some(e => e.id === currentAttVal)) attSelect.value = currentAttVal;
         attSelect.disabled = false;
+
+        if (evalSelect) {
+          const currentEvalVal = evalSelect.value;
+          evalSelect.innerHTML = state.employees.map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('');
+          if (currentEvalVal && state.employees.some(e => e.id === currentEvalVal)) evalSelect.value = currentEvalVal;
+          evalSelect.disabled = false;
+        }
       } else {
         const myEmp = state.employees.find(e => e.id === currentUser.empId);
-        attSelect.innerHTML = myEmp
+        const optionHtml = myEmp
           ? `<option value="${myEmp.id}">${myEmp.name} (${myEmp.id})</option>`
           : `<option value="">${currentUser.fullName}</option>`;
+        attSelect.innerHTML = optionHtml;
         attSelect.disabled = true;
-      }
 
-      const evalSelect = document.getElementById('eval-emp-select');
-      if (evalSelect) {
-        evalSelect.innerHTML = state.employees.map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('');
+        if (evalSelect) {
+          evalSelect.innerHTML = optionHtml;
+          evalSelect.disabled = true;
+        }
       }
 
       const visibleAttendance = state.attendance.filter(row => {
@@ -2006,6 +2186,47 @@
             <td><strong style="color:var(--tech-mint);">${formatVND(totalMoney)}</strong></td>
             <td>${row.note}</td>
             ${actionTd}
+          </tr>
+        `;
+      }).join('');
+
+      const visibleEvaluations = state.evaluations.filter(ev => {
+        if (isAdmin()) return true;
+        return ev.empId === currentUser.empId;
+      });
+
+      const evalBody = document.getElementById('eval-table-body');
+      evalBody.innerHTML = visibleEvaluations.map(ev => {
+        const emp = state.employees.find(e => e.id === ev.empId) || { name: 'Không xác định' };
+        let badgeHtml = `<span class="badge badge-pending">⏳ Đã gửi báo cáo (Chờ duyệt)</span>`;
+        if (ev.type === 'reward') {
+          badgeHtml = `<span class="badge badge-reward">Thưởng +${formatVND(ev.amount)}</span>`;
+        } else if (ev.type === 'penalty') {
+          badgeHtml = `<span class="badge badge-penalty">Phạt -${formatVND(ev.amount)}</span>`;
+        }
+
+        const evalActionTd = isAdmin() ? `
+          <td>
+            <div class="action-group">
+              <button class="btn btn-warning btn-sm" onclick="openGradeEvaluationModal('${ev.id}')">⚖ Chấm Thưởng/Phạt</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteEvaluation('${ev.id}')">✕ Xóa</button>
+            </div>
+          </td>
+        ` : '';
+
+        return `
+          <tr>
+            <td><strong>${emp.name}</strong><br><span style="color:var(--text-secondary);font-size:11px;">Mã: ${ev.empId}</span></td>
+            <td>
+              <div class="thumb-box">
+                <img src="${ev.photoThumb}" class="thumb-img" alt="Room">
+                <span class="timestamp-tag">${formatDateTime(ev.photoTime)}</span>
+              </div>
+            </td>
+            <td><strong>${ev.progress}%</strong> hoàn thành</td>
+            <td>${ev.issues}</td>
+            <td>${badgeHtml}</td>
+            ${evalActionTd}
           </tr>
         `;
       }).join('');
@@ -2058,31 +2279,6 @@
         document.getElementById('kpi-label-4').textContent = 'Tổng Lượt Chấm công';
         document.getElementById('kpi-total-records').textContent = `${state.attendance.length} Lượt`;
 
-        const evalBody = document.getElementById('eval-table-body');
-        evalBody.innerHTML = state.evaluations.map(ev => {
-          const emp = state.employees.find(e => e.id === ev.empId) || { name: 'Không xác định' };
-          const badgeHtml = ev.type === 'reward'
-            ? `<span class="badge badge-reward">Thưởng +${formatVND(ev.amount)}</span>`
-            : `<span class="badge badge-penalty">Phạt -${formatVND(ev.amount)}</span>`;
-          return `
-            <tr>
-              <td><strong>${emp.name}</strong></td>
-              <td>
-                <div class="thumb-box">
-                  <img src="${ev.photoThumb}" class="thumb-img" alt="Room">
-                  <span class="timestamp-tag">${formatDateTime(ev.photoTime)}</span>
-                </div>
-              </td>
-              <td><strong>${ev.progress}%</strong> hoàn thành</td>
-              <td>${ev.issues}</td>
-              <td>${badgeHtml}</td>
-              <td>
-                <button class="btn btn-danger btn-sm" onclick="deleteEvaluation('${ev.id}')">✕ Xóa</button>
-              </td>
-            </tr>
-          `;
-        }).join('');
-
         const accBody = document.getElementById('accounts-table-body');
         accBody.innerHTML = state.users.map(u => {
           const isRoot = u.username === 'admin1107';
@@ -2115,20 +2311,25 @@
 
       } else {
         const myHours = visibleAttendance.reduce((s, a) => s + a.hours, 0);
-        const myPay = visibleAttendance.reduce((s, a) => s + (a.hours * a.rate), 0);
+        const myBasePay = visibleAttendance.reduce((s, a) => s + (a.hours * a.rate), 0);
+        const myReward = visibleEvaluations.filter(e => e.type === 'reward').reduce((s, e) => s + e.amount, 0);
+        const myPenalty = visibleEvaluations.filter(e => e.type === 'penalty').reduce((s, e) => s + e.amount, 0);
+        const myNetPay = myBasePay + myReward - myPenalty;
 
         document.getElementById('kpi-label-1').textContent = 'Nhân viên Ghi danh';
         document.getElementById('kpi-staff-count').textContent = currentUser.fullName;
         document.getElementById('kpi-label-2').textContent = 'Giờ công Tháng này của bạn';
         document.getElementById('kpi-total-hours').textContent = `${myHours.toFixed(2)} Giờ`;
-        document.getElementById('kpi-label-3').textContent = 'Lương Tạm tính của bạn';
-        document.getElementById('kpi-total-payroll').textContent = formatVND(myPay);
+        document.getElementById('kpi-label-3').textContent = 'Thực lĩnh Tạm tính của bạn';
+        document.getElementById('kpi-total-payroll').textContent = formatVND(myNetPay);
         document.getElementById('kpi-label-4').textContent = 'Số Ca đã Chấm công';
         document.getElementById('kpi-total-records').textContent = `${visibleAttendance.length} Ca`;
       }
     }
 
     window.onload = async () => {
+      openAnnouncementModal();
+
       await pullFromCloud(false);
       try {
         const savedSession = sessionStorage.getItem(SESSION_KEY);
@@ -2138,7 +2339,6 @@
       } catch (e) {}
       applyRolePermissions();
 
-      // Tự động đồng bộ ngầm mỗi 25 giây
       setInterval(() => {
         if (currentUser && getActiveCloudUrl()) {
           pullFromCloud(false);
